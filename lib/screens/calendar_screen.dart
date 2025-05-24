@@ -5,7 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:crm_app/routes/app_routes.dart';
-import 'package:crm_app/widgets/add_client_bottom_sheet.dart';
+// import 'package:crm_app/widgets/add_client_bottom_sheet.dart';
+import 'package:crm_app/widgets/add_client_modals.dart';
+
 import 'package:crm_app/widgets/app_drawer.dart';
 import 'package:crm_app/screens/client_details_screen.dart';
 
@@ -33,7 +35,10 @@ class _CalendarScreenState extends State<CalendarScreen>
   void initState() {
     super.initState();
     _calendarHeight = ValueNotifier(
-        _calendarFormat == CalendarFormat.month ? _maxCalendarHeight : _minCalendarHeight);
+      _calendarFormat == CalendarFormat.month
+          ? _maxCalendarHeight
+          : _minCalendarHeight,
+    );
     _scrollController = ScrollController();
     _fetchEvents();
   }
@@ -49,12 +54,13 @@ class _CalendarScreenState extends State<CalendarScreen>
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('activity')
-        .orderBy('date', descending: true)
-        .get();
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('activity')
+            .orderBy('date', descending: true)
+            .get();
 
     Map<DateTime, List<DocumentSnapshot>> events = {};
 
@@ -62,13 +68,15 @@ class _CalendarScreenState extends State<CalendarScreen>
       final data = doc.data();
       if (data.containsKey('scheduledAt')) {
         final raw = data['scheduledAt'];
-        final scheduledAt = raw is Timestamp
-            ? raw.toDate()
-            : (raw is DateTime ? raw : null);
+        final scheduledAt =
+            raw is Timestamp ? raw.toDate() : (raw is DateTime ? raw : null);
         if (scheduledAt == null) continue;
 
-        final dateOnly =
-            DateTime(scheduledAt.year, scheduledAt.month, scheduledAt.day);
+        final dateOnly = DateTime(
+          scheduledAt.year,
+          scheduledAt.month,
+          scheduledAt.day,
+        );
         events.putIfAbsent(dateOnly, () => []);
         events[dateOnly]!.add(doc);
       }
@@ -85,52 +93,52 @@ class _CalendarScreenState extends State<CalendarScreen>
     return _events[dateOnly] ?? [];
   }
 
-Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return;
+  Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-  try {
-    final comment = doc['comment'] ?? '';
-    final name = doc['name'] ?? '';
-    final activityId = doc.id;
+    try {
+      final comment = doc['comment'] ?? '';
+      final name = doc['name'] ?? '';
+      final activityId = doc.id;
 
-    final clientRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('clients')
-        .doc(name);
+      final clientRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('clients')
+          .doc(name);
 
-    // 🔥 1. Видалити activity-запис
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('activity')
-        .doc(activityId)
-        .delete();
+      // 🔥 1. Видалити activity-запис
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('activity')
+          .doc(activityId)
+          .delete();
 
-    // 🧹 2. Видалити коментар клієнта з таким самим ID
-    await clientRef.collection('comments').doc(activityId).delete();
+      // 🧹 2. Видалити коментар клієнта з таким самим ID
+      await clientRef.collection('comments').doc(activityId).delete();
 
-    // 📝 3. Додати "лог" про видалення
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('activity')
-        .add({
-      'name': name,
-      'comment': comment,
-      'date': DateTime.now(),
-      'userId': user.uid,
-      'edited': false,
-      'deleted': true,
-      'action': 'deleted_record',
-    });
+      // 📝 3. Додати "лог" про видалення
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('activity')
+          .add({
+            'name': name,
+            'comment': comment,
+            'date': DateTime.now(),
+            'userId': user.uid,
+            'edited': false,
+            'deleted': true,
+            'action': 'deleted_record',
+          });
 
-    await _fetchEvents();
-  } catch (e) {
-    print('Помилка при видаленні запису: $e');
+      await _fetchEvents();
+    } catch (e) {
+      print('Помилка при видаленні запису: $e');
+    }
   }
-}
 
   Color _getMarkerColor(DateTime date) {
     final now = DateTime.now();
@@ -163,12 +171,14 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
             ),
             onPressed: () {
               setState(() {
-                _calendarFormat = _calendarFormat == CalendarFormat.month
-                    ? CalendarFormat.week
-                    : CalendarFormat.month;
-                _calendarHeight.value = _calendarFormat == CalendarFormat.month
-                    ? _maxCalendarHeight
-                    : _minCalendarHeight;
+                _calendarFormat =
+                    _calendarFormat == CalendarFormat.month
+                        ? CalendarFormat.week
+                        : CalendarFormat.month;
+                _calendarHeight.value =
+                    _calendarFormat == CalendarFormat.month
+                        ? _maxCalendarHeight
+                        : _minCalendarHeight;
               });
             },
           ),
@@ -199,14 +209,14 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
                   final color = _getMarkerColor(date);
                   return events.isNotEmpty
                       ? Container(
-                          width: 6,
-                          height: 6,
-                          margin: const EdgeInsets.only(top: 2),
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                          ),
-                        )
+                        width: 6,
+                        height: 6,
+                        margin: const EdgeInsets.only(top: 2),
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      )
                       : const SizedBox.shrink();
                 },
               ),
@@ -236,12 +246,14 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
             ),
           ),
           GestureDetector(
-            onTap: () => _calendarHeight.value =
-                _calendarHeight.value == 0
-                    ? (_calendarFormat == CalendarFormat.month
-                        ? _maxCalendarHeight
-                        : _minCalendarHeight)
-                    : 0,
+            onTap:
+                () =>
+                    _calendarHeight.value =
+                        _calendarHeight.value == 0
+                            ? (_calendarFormat == CalendarFormat.month
+                                ? _maxCalendarHeight
+                                : _minCalendarHeight)
+                            : 0,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -260,13 +272,14 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
                   const SizedBox(width: 8),
                   ValueListenableBuilder<double>(
                     valueListenable: _calendarHeight,
-                    builder: (context, height, _) => Icon(
-                      height == 0
-                          ? Icons.keyboard_arrow_down
-                          : Icons.keyboard_arrow_up,
-                      color: Colors.deepPurple,
-                    ),
-                  )
+                    builder:
+                        (context, height, _) => Icon(
+                          height == 0
+                              ? Icons.keyboard_arrow_down
+                              : Icons.keyboard_arrow_up,
+                          color: Colors.deepPurple,
+                        ),
+                  ),
                 ],
               ),
             ),
@@ -277,32 +290,48 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
                 if (notification is UserScrollNotification) {
                   if (notification.direction == ScrollDirection.reverse) {
                     _calendarHeight.value = 0;
-                  } else if (notification.direction == ScrollDirection.forward &&
+                  } else if (notification.direction ==
+                          ScrollDirection.forward &&
                       _scrollController.position.pixels <=
                           _scrollController.position.minScrollExtent + 0.5) {
-                    _calendarHeight.value = _calendarFormat == CalendarFormat.month
-                        ? _maxCalendarHeight
-                        : _minCalendarHeight;
+                    _calendarHeight.value =
+                        _calendarFormat == CalendarFormat.month
+                            ? _maxCalendarHeight
+                            : _minCalendarHeight;
                   }
                 }
                 return false;
               },
               child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(user.uid)
-                    .collection('activity')
-                    .where('scheduledAt',
-                        isGreaterThanOrEqualTo: Timestamp.fromDate(
-                          DateTime(_selectedDay.year, _selectedDay.month,
-                              _selectedDay.day),
-                        ))
-                    .where('scheduledAt',
-                        isLessThanOrEqualTo: Timestamp.fromDate(
-                          DateTime(_selectedDay.year, _selectedDay.month,
-                              _selectedDay.day, 23, 59, 59),
-                        ))
-                    .snapshots(),
+                stream:
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.uid)
+                        .collection('activity')
+                        .where(
+                          'scheduledAt',
+                          isGreaterThanOrEqualTo: Timestamp.fromDate(
+                            DateTime(
+                              _selectedDay.year,
+                              _selectedDay.month,
+                              _selectedDay.day,
+                            ),
+                          ),
+                        )
+                        .where(
+                          'scheduledAt',
+                          isLessThanOrEqualTo: Timestamp.fromDate(
+                            DateTime(
+                              _selectedDay.year,
+                              _selectedDay.month,
+                              _selectedDay.day,
+                              23,
+                              59,
+                              59,
+                            ),
+                          ),
+                        )
+                        .snapshots(),
                 builder: (context, snapshot) {
                   final clients = snapshot.data?.docs ?? [];
 
@@ -322,30 +351,44 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
                       final client = clients[index];
                       final clientName = client['name'] ?? '—';
                       final comment = client['comment'] ?? '';
-                      final timestamp = client['scheduledAt'] as Timestamp?;
-                      final date = timestamp?.toDate();
-                      final hour = date != null
-                          ? '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}'
-                          : '--:--';
+                      final startTimestamp =
+                          client['scheduledAt'] as Timestamp?;
+                      final endTimestamp = client['scheduledEnd'] as Timestamp?;
+
+                      final startDate = startTimestamp?.toDate();
+                      final endDate = endTimestamp?.toDate();
+
+                      String formatTime(DateTime? dateTime) {
+                        if (dateTime == null) return '--:--';
+                        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+                      }
+
+                      // final timeRange =
+                      //     '${formatTime(startDate)} – ${formatTime(endDate)}';
 
                       return GestureDetector(
                         onLongPress: () async {
                           final confirm = await showDialog<bool>(
                             context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Видалити запис?'),
-                              content: const Text('Ви точно хочете видалити цей запис?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(false),
-                                  child: const Text('Скасувати'),
+                            builder:
+                                (ctx) => AlertDialog(
+                                  title: const Text('Видалити запис?'),
+                                  content: const Text(
+                                    'Ви точно хочете видалити цей запис?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(ctx).pop(false),
+                                      child: const Text('Скасувати'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed:
+                                          () => Navigator.of(ctx).pop(true),
+                                      child: const Text('Видалити'),
+                                    ),
+                                  ],
                                 ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.of(ctx).pop(true),
-                                  child: const Text('Видалити'),
-                                ),
-                              ],
-                            ),
                           );
 
                           if (confirm == true) {
@@ -354,21 +397,46 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
                         },
                         child: Card(
                           margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           elevation: 1,
                           child: ListTile(
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            leading: Text(
-                              hour,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                              horizontal: 16,
+                              vertical: 12,
                             ),
+                            leading: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  formatTime(startDate),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const Text(
+                                  '–',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color.fromARGB(255, 110, 110, 110),
+                                    height: 0.8,
+                                  ),
+                                ),
+                                Text(
+                                  formatTime(endDate),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+
                             title: Text(
                               clientName,
                               style: const TextStyle(fontSize: 16),
@@ -383,9 +451,10 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => ClientDetailsScreen(
-                                    clientName: clientName,
-                                  ),
+                                  builder:
+                                      (_) => ClientDetailsScreen(
+                                        clientName: clientName,
+                                      ),
                                 ),
                               );
                             },
@@ -403,16 +472,13 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
             padding: const EdgeInsets.all(16),
             child: ElevatedButton(
               onPressed: () async {
-                final wasAdded = await showAddClientBottomSheet(
-                  context,
-                  _selectedDay,
-                );
-                if (wasAdded) {
-                  await _fetchEvents();
-                  setState(() {
-                    _selectedDay = _selectedDay.add(const Duration(seconds: 0));
-                  });
-                }
+final wasAdded = await showAddClientModalForCalendar(context, _selectedDay);
+if (wasAdded) {
+  await _fetchEvents();
+  setState(() {
+    _selectedDay = _selectedDay.add(const Duration(seconds: 0));
+  });
+}
               },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),

@@ -216,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 2.0),
                     child: Text(
-                      'Записаний на ${DateFormat('HH:mm, dd.MM.yyyy').format(
+                      'Запис на ${DateFormat('HH:mm, dd.MM.yyyy').format(
                         scheduledAt is Timestamp
                             ? scheduledAt.toDate()
                             : DateTime.tryParse(scheduledAt) ?? DateTime.now(),

@@ -33,16 +33,34 @@ Widget buildTimePickerModal(
             },
           ),
         ),
-        CupertinoButton(
-          child: const Text('Готово'),
-          onPressed: () {
-            if (minTime != null && tempTime < minTime) {
-              Navigator.of(context).pop(); // або можна додати валідацію
-            } else {
-              Navigator.of(context).pop(tempTime);
-            }
-          },
+        Padding(
+  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+  child: SizedBox(
+    width: double.infinity,
+    child: ElevatedButton(
+      onPressed: () {
+        if (minTime != null && tempTime < minTime) {
+          Navigator.of(context).pop();
+        } else {
+          Navigator.of(context).pop(tempTime);
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.deepPurple,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
+        elevation: 0,
+      ),
+      child: const Text(
+        'Готово',
+        style: TextStyle(fontSize: 16, color: Colors.white),
+      ),
+    ),
+  ),
+),
+
       ],
     ),
   );

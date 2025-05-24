@@ -7,7 +7,9 @@ import 'dart:io';
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import '/widgets/autocomplete_text_field.dart';
-import '/widgets/add_client_bottom_sheet.dart';
+// import '/widgets/add_client_bottom_sheet.dart';
+import 'package:crm_app/widgets/add_client_modals.dart';
+
 
 class AddClientScreen extends StatefulWidget {
   final String? fixedClientName;
@@ -19,6 +21,9 @@ class AddClientScreen extends StatefulWidget {
 }
 
 class _AddClientScreenState extends State<AddClientScreen> {
+  TimeOfDay? _startTime;
+  TimeOfDay? _endTime;
+
   final _nameController = TextEditingController();
   final _commentController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -111,7 +116,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
     }
 
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null || _scheduledDate == null || _startTime == null || _endTime == null) return;
 
     final clientRef = FirebaseFirestore.instance
         .collection('users')
@@ -130,6 +135,22 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
     final previewPaths = _selectedImages.map((file) => file.path).toList();
     final originalPaths = _originalImages.map((file) => file.path).toList();
+
+    final fullStartDateTime = DateTime(
+      _scheduledDate!.year,
+      _scheduledDate!.month,
+      _scheduledDate!.day,
+      _startTime!.hour,
+      _startTime!.minute,
+    );
+
+    final fullEndDateTime = DateTime(
+      _scheduledDate!.year,
+      _scheduledDate!.month,
+      _scheduledDate!.day,
+      _endTime!.hour,
+      _endTime!.minute,
+    );
 
     await clientRef.collection('comments').add({
       'comment': commentText,
@@ -151,31 +172,54 @@ class _AddClientScreenState extends State<AddClientScreen> {
       'userId': user.uid,
       'images': previewPaths,
       'originalImages': originalPaths,
+      'scheduledAt': fullStartDateTime,
+      'scheduledEnd': fullEndDateTime,
+      'duration': fullEndDateTime.difference(fullStartDateTime).inMinutes,
     });
 
     Navigator.of(context).pop();
   }
 
-  Future<void> _scheduleClient() async {
-    final result = await showAddClientBottomSheet(
-      context,
-      DateTime.now(),
-      fixedClientName: _nameController.text.trim(),
-      initialComment: _commentController.text.trim(),
-    );
-    if (result) {
-      setState(() {
-        _scheduledDate = DateTime.now();
-      });
-    }
+  String formatTimeOfDay24h(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
+
+Future<void> _scheduleClient() async {
+  final now = DateTime.now();
+  final clientName = _nameController.text.trim();
+  final comment = _commentController.text.trim();
+
+  final result = await showAddClientModalForScreen(
+    context,
+    now,
+    fixedClientName: clientName,
+    initialComment: comment,
+  );
+
+  if (result != null &&
+      result is Map<String, dynamic> &&
+      result['scheduledDate'] != null &&
+      result['startTime'] != null &&
+      result['endTime'] != null) {
+    setState(() {
+      _scheduledDate = result['scheduledDate'] as DateTime;
+      _startTime = result['startTime'] as TimeOfDay;
+      _endTime = result['endTime'] as TimeOfDay;
+    });
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.systemGroupedBackground,
+      backgroundColor: const Color.fromARGB(255, 242, 242, 247),
       navigationBar: CupertinoNavigationBar(
-        middle: Text(widget.fixedClientName != null ? 'Додати допис' : 'Створити допис'),
+        middle: Text(
+          widget.fixedClientName != null ? 'Додати допис' : 'Створити допис',
+        ),
       ),
       child: SafeArea(
         child: SingleChildScrollView(
@@ -185,7 +229,10 @@ class _AddClientScreenState extends State<AddClientScreen> {
             children: [
               const Padding(
                 padding: EdgeInsets.only(bottom: 6),
-                child: Text('Імʼя клієнта', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                child: Text(
+                  'Імʼя клієнта',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
               ),
               AutocompleteTextField(
                 controller: _nameController,
@@ -193,7 +240,9 @@ class _AddClientScreenState extends State<AddClientScreen> {
                 placeholder: 'Введіть імʼя клієнта',
                 enabled: widget.fixedClientName == null,
                 onSelected: (value) {
-                  final exists = _clientNames.any((name) => name.toLowerCase() == value.toLowerCase());
+                  final exists = _clientNames.any(
+                    (name) => name.toLowerCase() == value.toLowerCase(),
+                  );
                   setState(() {
                     _isNewClient = !exists;
                   });
@@ -203,14 +252,23 @@ class _AddClientScreenState extends State<AddClientScreen> {
               if (_isNewClient) ...[
                 const Padding(
                   padding: EdgeInsets.only(bottom: 6),
-                  child: Text('Номер телефону', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  child: Text(
+                    'Номер телефону',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
                 ),
                 CupertinoTextField(
                   controller: _phoneController,
                   placeholder: 'Введіть номер телефону',
                   keyboardType: TextInputType.phone,
-                  style: const TextStyle(fontSize: 16, color: CupertinoColors.black),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: CupertinoColors.black,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: CupertinoColors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -220,13 +278,19 @@ class _AddClientScreenState extends State<AddClientScreen> {
               ],
               const Padding(
                 padding: EdgeInsets.only(bottom: 6),
-                child: Text('Коментар', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                child: Text(
+                  'Коментар',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
               ),
               CupertinoTextField(
                 controller: _commentController,
                 placeholder: 'Коментар до запису',
                 maxLines: 4,
-                style: const TextStyle(fontSize: 16, color: CupertinoColors.black),
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: CupertinoColors.black,
+                ),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: CupertinoColors.white,
@@ -237,51 +301,70 @@ class _AddClientScreenState extends State<AddClientScreen> {
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: CupertinoColors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: const [
-                      Icon(CupertinoIcons.paperclip, color: CupertinoColors.systemGrey),
+                      Icon(
+                        CupertinoIcons.paperclip,
+                        color: CupertinoColors.systemGrey,
+                      ),
                       SizedBox(width: 10),
                       Expanded(
-                        child: Text('Додати фото', style: TextStyle(fontSize: 16, color: CupertinoColors.black), overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          'Додати фото',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: CupertinoColors.black,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-              if (_scheduledDate != null) ...[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    'Записано на: ${DateFormat.yMMMMd('uk_UA').format(_scheduledDate!)}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: CupertinoColors.systemPurple),
-                  ),
-                ),
-              ],
               SizedBox(
                 width: double.infinity,
                 child: CupertinoButton(
-                  color: CupertinoColors.systemGrey4,
+                  color: _scheduledDate == null
+                      ? Colors.deepPurple
+                      : const Color.fromARGB(255, 242, 242, 247),
                   borderRadius: BorderRadius.circular(12),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  onPressed: _submit,
-                  child: const Text('Зберегти', style: TextStyle(color: CupertinoColors.black)),
+                  onPressed: _scheduleClient,
+                  child: Text(
+  _scheduledDate != null && _startTime != null && _endTime != null
+      ? '${DateFormat('dd.MM').format(_scheduledDate!)}, '
+        '${formatTimeOfDay24h(_startTime!)}–${formatTimeOfDay24h(_endTime!)}'
+      : 'Записати клієнта',
+  style: TextStyle(
+    color: _scheduledDate != null && _startTime != null && _endTime != null
+        ? Colors.grey[800]  // темно-сірий
+        : Colors.white,     // білий, якщо ще нічого не вибрано
+  ),
+),
+
                 ),
               ),
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: CupertinoButton(
-                  color: CupertinoColors.activeBlue,
+                  color: _scheduledDate != null
+                      ? Colors.deepPurple
+                      : CupertinoColors.systemGrey4,
                   borderRadius: BorderRadius.circular(12),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  onPressed: _scheduleClient,
-                  child: const Text('Записати клієнта', style: TextStyle(color: Colors.white)),
+                  onPressed: _submit,
+                  child: const Text('Зберегти', style: TextStyle(color: CupertinoColors.white)),
                 ),
               ),
             ],
