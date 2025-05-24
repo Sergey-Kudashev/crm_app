@@ -206,14 +206,14 @@ Future<Map<String, dynamic>?> showAddClientCore({
                           recordDate.day,
                           startTime!.inHours,
                           startTime!.inMinutes % 60,
-                        );
+                        ).toUtc();
                         final fullEndDateTime = DateTime(
                           recordDate.year,
                           recordDate.month,
                           recordDate.day,
                           endTime!.inHours,
                           endTime!.inMinutes % 60,
-                        );
+                        ).toUtc();
 
                         final clientName = nameController.text.trim();
                         final phone = phoneController.text.trim();

@@ -27,7 +27,8 @@ class AppDrawer extends StatelessWidget {
           color: isSelected ? Colors.blue.shade50 : Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: onTap ??
+            onTap:
+                onTap ??
                 () {
                   Navigator.pop(context);
                   if (currentRoute != routeName) {
@@ -63,8 +64,10 @@ class AppDrawer extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16),
+              padding: const EdgeInsets.symmetric(
+                vertical: 24.0,
+                horizontal: 16,
+              ),
               child: Row(
                 children: [
                   CircleAvatar(
@@ -107,6 +110,11 @@ class AppDrawer extends StatelessWidget {
               title: 'Календар',
               icon: Icons.calendar_month,
               routeName: AppRoutes.calendar,
+            ),
+            buildDrawerItem(
+              title: 'Сьогодні',
+              icon: Icons.today,
+              routeName: AppRoutes.todayScreen,
             ),
             buildDrawerItem(
               title: 'Вийти',
