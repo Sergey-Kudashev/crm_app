@@ -32,7 +32,9 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Дописи про клієнта')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('Дописи про клієнта'),
+      backgroundColor: Colors.grey.shade50,),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')

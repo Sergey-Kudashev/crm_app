@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -27,6 +26,16 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
   void initState() {
     super.initState();
     _fetchClientInfo();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    for (var c in _phoneControllers) {
+      c.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> _fetchClientInfo() async {
@@ -138,7 +147,7 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
         style: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
-          color: CupertinoColors.systemGrey,
+          color: Colors.grey,
         ),
       ),
     );
@@ -149,7 +158,7 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isPast ? CupertinoColors.systemGrey5 : CupertinoColors.systemGrey6,
+        color: isPast ? Colors.grey.shade200 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -159,7 +168,7 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
             DateFormat('dd.MM.yyyy, HH:mm').format(entry['date']),
             style: const TextStyle(
               fontSize: 13,
-              color: CupertinoColors.systemGrey,
+              color: Colors.grey,
             ),
           ),
           const SizedBox(height: 6),
@@ -168,8 +177,7 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w400,
-              fontFamily: '.SF Pro Text',
-              color: CupertinoColors.label,
+              color: Colors.black87,
               decoration: TextDecoration.none,
             ),
           ),
@@ -180,12 +188,16 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Інформація про клієнта'),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Інформація клієнта'),
+        backgroundColor: Colors.grey.shade50,
+        foregroundColor: Colors.black87,
+        elevation: 0,
       ),
-      child: isLoading
-          ? const Center(child: CupertinoActivityIndicator())
+      backgroundColor: Colors.white,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
           : SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -193,26 +205,32 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildLabel('Імʼя'),
-                    CupertinoTextField(
+                    TextField(
                       controller: _nameController,
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: CupertinoColors.systemGrey6,
-                        borderRadius: BorderRadius.circular(12),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
-                      style: const TextStyle(fontSize: 16, color: CupertinoColors.label),
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
                       onEditingComplete: _saveChanges,
                     ),
                     const SizedBox(height: 16),
                     _buildLabel('Емейл'),
-                    CupertinoTextField(
+                    TextField(
                       controller: _emailController,
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: CupertinoColors.systemGrey6,
-                        borderRadius: BorderRadius.circular(12),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
-                      style: const TextStyle(fontSize: 16, color: CupertinoColors.label),
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
                       onEditingComplete: _saveChanges,
                     ),
                     const SizedBox(height: 16),
@@ -222,36 +240,33 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
                           child: Row(
                             children: [
                               Expanded(
-                                child: CupertinoTextField(
+                                child: TextField(
                                   controller: controller,
                                   keyboardType: TextInputType.phone,
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                  decoration: BoxDecoration(
-                                    color: CupertinoColors.systemGrey6,
-                                    borderRadius: BorderRadius.circular(12),
+                                  decoration: InputDecoration(
+                                    filled: true,
+                                    fillColor: Colors.grey.shade100,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
                                   ),
-                                  style: const TextStyle(fontSize: 16, color: CupertinoColors.label),
+                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
                                   onEditingComplete: _saveChanges,
                                 ),
                               ),
-                              CupertinoButton(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: const Icon(CupertinoIcons.phone, size: 22),
+                              IconButton(
+                                icon: const Icon(Icons.phone),
                                 onPressed: () => _callPhone(controller.text),
                               ),
                             ],
                           ),
                         )),
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
+                    TextButton(
                       onPressed: _addPhoneField,
                       child: const Text(
                         '+ Додати номер телефону',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: CupertinoColors.activeBlue,
-                          decoration: TextDecoration.none,
-                        ),
+                        style: TextStyle(fontSize: 15, color: Colors.blue),
                       ),
                     ),
                     const SizedBox(height: 32),

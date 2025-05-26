@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+// import 'package:flutter/rendering.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:crm_app/routes/app_routes.dart';
-// import 'package:crm_app/widgets/add_client_bottom_sheet.dart';
 import 'package:crm_app/widgets/add_client_modals.dart';
-
 import 'package:crm_app/widgets/app_drawer.dart';
 import 'package:crm_app/screens/client_details_screen.dart';
 
@@ -25,6 +23,7 @@ class _CalendarScreenState extends State<CalendarScreen>
   CalendarFormat _calendarFormat = CalendarFormat.week;
   Map<DateTime, List<DocumentSnapshot>> _events = {};
   final _calendarKey = GlobalKey();
+  final GlobalKey _calendarSizeKey = GlobalKey();
 
   late final ScrollController _scrollController;
   late final ValueNotifier<double> _calendarHeight;
@@ -159,7 +158,9 @@ class _CalendarScreenState extends State<CalendarScreen>
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.grey.shade50,
         title: const Text('Календар'),
         actions: [
           IconButton(
@@ -170,15 +171,26 @@ class _CalendarScreenState extends State<CalendarScreen>
               color: Colors.black,
             ),
             onPressed: () {
+              final newFormat =
+                  _calendarFormat == CalendarFormat.month
+                      ? CalendarFormat.week
+                      : CalendarFormat.month;
+
               setState(() {
-                _calendarFormat =
-                    _calendarFormat == CalendarFormat.month
-                        ? CalendarFormat.week
-                        : CalendarFormat.month;
-                _calendarHeight.value =
-                    _calendarFormat == CalendarFormat.month
-                        ? _maxCalendarHeight
-                        : _minCalendarHeight;
+                _calendarFormat = newFormat;
+              });
+
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (newFormat == CalendarFormat.month) {
+                  final context = _calendarSizeKey.currentContext;
+                  if (context != null) {
+                    final box = context.findRenderObject() as RenderBox?;
+                    final height = box?.size.height ?? 300;
+                    _calendarHeight.value = height;
+                  }
+                } else {
+                  _calendarHeight.value = _minCalendarHeight;
+                }
               });
             },
           ),
@@ -188,60 +200,61 @@ class _CalendarScreenState extends State<CalendarScreen>
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ValueListenableBuilder<double>(
-            valueListenable: _calendarHeight,
-            builder: (context, height, child) {
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                height: height,
-                child: height > 0 ? child! : const SizedBox.shrink(),
-              );
-            },
-            child: TableCalendar(
-              key: _calendarKey,
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: _focusedDay,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              eventLoader: _getEventsForDay,
-              calendarBuilders: CalendarBuilders(
-                markerBuilder: (context, date, events) {
-                  final color = _getMarkerColor(date);
-                  return events.isNotEmpty
-                      ? Container(
-                        width: 6,
-                        height: 6,
-                        margin: const EdgeInsets.only(top: 2),
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                        ),
-                      )
-                      : const SizedBox.shrink();
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: Container(
+              key: _calendarSizeKey,
+              child: TableCalendar(
+                key: _calendarKey,
+                calendarFormat: _calendarFormat,
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                startingDayOfWeek: StartingDayOfWeek.monday,
+                eventLoader: _getEventsForDay,
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
                 },
-              ),
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-              },
-              calendarFormat: _calendarFormat,
-              startingDayOfWeek: StartingDayOfWeek.monday,
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
-              ),
-              calendarStyle: const CalendarStyle(
-                todayDecoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
+                onPageChanged: (focusedDay) {
+                  setState(() => _focusedDay = focusedDay);
+                },
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
                 ),
-                selectedDecoration: BoxDecoration(
-                  color: Colors.deepPurple,
-                  shape: BoxShape.circle,
+                calendarStyle: CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: Colors.deepPurple.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: BoxDecoration(
+                    color: Colors.deepPurple,
+                    shape: BoxShape.circle,
+                  ),
+                  markerDecoration: BoxDecoration(shape: BoxShape.circle),
                 ),
-                markerDecoration: BoxDecoration(shape: BoxShape.circle),
+                calendarBuilders: CalendarBuilders(
+                  markerBuilder: (context, date, events) {
+                    final color = _getMarkerColor(date);
+                    return events.isNotEmpty
+                        ? Container(
+                          width: 6,
+                          height: 6,
+                          margin: const EdgeInsets.only(top: 2),
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                          ),
+                        )
+                        : const SizedBox.shrink();
+                  },
+                ),
               ),
             ),
           ),
@@ -287,19 +300,19 @@ class _CalendarScreenState extends State<CalendarScreen>
           Expanded(
             child: NotificationListener<UserScrollNotification>(
               onNotification: (notification) {
-                if (notification is UserScrollNotification) {
-                  if (notification.direction == ScrollDirection.reverse) {
-                    _calendarHeight.value = 0;
-                  } else if (notification.direction ==
-                          ScrollDirection.forward &&
-                      _scrollController.position.pixels <=
-                          _scrollController.position.minScrollExtent + 0.5) {
-                    _calendarHeight.value =
-                        _calendarFormat == CalendarFormat.month
-                            ? _maxCalendarHeight
-                            : _minCalendarHeight;
-                  }
-                }
+                // if (notification is UserScrollNotification) {
+                //   if (notification.direction == ScrollDirection.reverse) {
+                //     _calendarHeight.value = 0;
+                //   } else if (notification.direction ==
+                //           ScrollDirection.forward &&
+                //       _scrollController.position.pixels <=
+                //           _scrollController.position.minScrollExtent + 0.5) {
+                //     _calendarHeight.value =
+                //         _calendarFormat == CalendarFormat.month
+                //             ? _maxCalendarHeight
+                //             : _minCalendarHeight;
+                //   }
+                // }
                 return false;
               },
               child: StreamBuilder<QuerySnapshot>(
@@ -472,13 +485,16 @@ class _CalendarScreenState extends State<CalendarScreen>
             padding: const EdgeInsets.all(16),
             child: ElevatedButton(
               onPressed: () async {
-final wasAdded = await showAddClientModalForCalendar(context, _selectedDay);
-if (wasAdded) {
-  await _fetchEvents();
-  setState(() {
-    _selectedDay = _selectedDay.add(const Duration(seconds: 0));
-  });
-}
+                final wasAdded = await showAddClientModalForCalendar(
+                  context,
+                  _selectedDay,
+                );
+                if (wasAdded) {
+                  await _fetchEvents();
+                  setState(() {
+                    _selectedDay = _selectedDay.add(const Duration(seconds: 0));
+                  });
+                }
               },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),

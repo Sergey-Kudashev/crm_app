@@ -26,7 +26,9 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Клієнти')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('Клієнти'),
+      backgroundColor: Colors.grey.shade50,),
       drawer: const AppDrawer(currentRoute: AppRoutes.clients),
       body: Column(
         children: [
