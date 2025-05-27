@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'autocomplete_text_field.dart';
 import '/widgets/time_range_picker_modal.dart';
 import '/widgets/date_picker_modal.dart';
+import 'package:crm_app/widgets/string_utils.dart';
+import 'package:intl/intl.dart';
 
 Future<Map<String, dynamic>?> showAddClientModalForScreen(
   BuildContext context,
@@ -47,15 +49,18 @@ Future<Map<String, dynamic>?> showAddClientCore({
   String? initialComment,
   required bool allowDateSelection,
   required bool autoSubmitToFirestore,
+  Duration? initialStartTime, // <-- додати
+  Duration? initialEndTime, // <-- додати
 }) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return null;
 
-  final clientsSnapshot = await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.uid)
-      .collection('clients')
-      .get();
+  final clientsSnapshot =
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('clients')
+          .get();
 
   final List<String> existingClients =
       clientsSnapshot.docs.map((doc) => doc['name'] as String).toList();
@@ -67,8 +72,8 @@ Future<Map<String, dynamic>?> showAddClientCore({
   final maxSize = fixedClientName == null ? 0.7 : 0.5;
   final minSize = 0.3;
 
-  Duration? startTime;
-  Duration? endTime;
+  Duration? startTime = initialStartTime;
+  Duration? endTime = initialEndTime;
   DateTime recordDate = selectedDate;
   bool isNewClient = fixedClientName == null;
 
@@ -76,214 +81,339 @@ Future<Map<String, dynamic>?> showAddClientCore({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: initialSize,
-      minChildSize: minSize,
-      maxChildSize: maxSize,
-      builder: (context, scrollController) {
-        return Material(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          clipBehavior: Clip.antiAlias,
-          child: Padding(
-            padding: MediaQuery.of(context).viewInsets.add(const EdgeInsets.all(16)),
-            child: StatefulBuilder(
-              builder: (context, setState) => ListView(
-                controller: scrollController,
-                children: [
-                  if (fixedClientName == null) ...[
-                    const Text('Ім’я клієнта', style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    AutocompleteTextField(
-                      controller: nameController,
-                      suggestions: existingClients,
-                      placeholder: 'Введіть ім’я клієнта',
-                      enabled: true,
-                      onSelected: (value) {
-                        setState(() {
-                          isNewClient = !existingClients.any((name) => name.toLowerCase() == value.toLowerCase());
-                        });
-                      },
-                      decoration: const InputDecoration(hintText: 'Введіть ім’я клієнта'),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (isNewClient) ...[
-                    const Text('Телефон', style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(hintText: 'Введіть номер телефону'),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (initialComment == null) ...[
-                    const Text('Коментар', style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: commentController,
-                      maxLines: 2,
-                      decoration: const InputDecoration(hintText: 'Введіть коментар до запису'),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                  const Text('Година запису', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          startTime != null && endTime != null
-                              ? '${startTime!.inHours.toString().padLeft(2, '0')}:${(startTime!.inMinutes % 60).toString().padLeft(2, '0')} – '
-                                  '${endTime!.inHours.toString().padLeft(2, '0')}:${(endTime!.inMinutes % 60).toString().padLeft(2, '0')}'
-                              : 'Не обрано',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                      CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        color: Colors.deepPurple,
-                        borderRadius: BorderRadius.circular(24),
-                        child: const Text('Обрати годину', style: TextStyle(color: Colors.white)),
-                        onPressed: () async {
-                          if (allowDateSelection) {
-                            final pickedDate = await showDatePickerModal(context, recordDate);
-                            if (pickedDate != null) setState(() => recordDate = pickedDate);
-                          }
-
-                          final now = TimeOfDay.now();
-                          final initialStart = startTime ?? Duration(hours: now.hour, minutes: now.minute);
-
-                          final selectedStart = await showModalBottomSheet<Duration>(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => buildTimePickerModal(
-                              context,
-                              title: 'Обери годину початку',
-                              initial: initialStart,
-                            ),
-                          );
-                          if (selectedStart == null) return;
-                          setState(() => startTime = selectedStart);
-
-                          final initialEnd =
-                              endTime != null && endTime! > selectedStart ? endTime! : selectedStart + const Duration(hours: 1);
-
-                          final selectedEnd = await showModalBottomSheet<Duration>(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => buildTimePickerModal(
-                              context,
-                              title: 'Обери годину закінчення',
-                              initial: initialEnd,
-                              minTime: selectedStart,
-                            ),
-                          );
-                          if (selectedEnd == null) return;
-                          setState(() => endTime = selectedEnd);
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (startTime == null || endTime == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Оберіть час початку і завершення')),
-                          );
-                          return;
-                        }
-
-                        final fullStartDateTime = DateTime(
-                          recordDate.year,
-                          recordDate.month,
-                          recordDate.day,
-                          startTime!.inHours,
-                          startTime!.inMinutes % 60,
-                        );
-                        final fullEndDateTime = DateTime(
-                          recordDate.year,
-                          recordDate.month,
-                          recordDate.day,
-                          endTime!.inHours,
-                          endTime!.inMinutes % 60,
-                        );
-
-                        final clientName = nameController.text.trim();
-                        final phone = phoneController.text.trim();
-                        final comment = commentController.text.trim();
-                        final duration = endTime! - startTime!;
-
-                        final result = {
-                          'scheduledDate': recordDate,
-                          'startTime': TimeOfDay(hour: startTime!.inHours, minute: startTime!.inMinutes % 60),
-                          'endTime': TimeOfDay(hour: endTime!.inHours, minute: endTime!.inMinutes % 60),
-                          'clientName': clientName,
-                          'phone': phone,
-                          'comment': comment,
-                          'isNewClient': isNewClient,
-                        };
-
-                        if (autoSubmitToFirestore) {
-                          final clientRef = FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(user.uid)
-                              .collection('clients')
-                              .doc(clientName);
-
-                          if (isNewClient) {
-                            await clientRef.set({'name': clientName, 'phoneNumber': phone});
-                          }
-
-                          final activityRef = FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(user.uid)
-                              .collection('activity')
-                              .doc();
-
-                          final activityId = activityRef.id;
-
-                          await clientRef.collection('comments').doc(activityId).set({
-                            'comment': comment,
-                            'date': DateTime.now(),
-                            'activityId': activityId,
-                          });
-
-                          await activityRef.set({
-                            'name': clientName,
-                            'comment': comment,
-                            'scheduledAt': fullStartDateTime,
-                            'scheduledEnd': fullEndDateTime,
-                            'duration': duration.inMinutes,
-                            'date': DateTime.now(),
-                            'userId': user.uid,
-                          });
-
-                          Navigator.of(context).pop({'success': true});
-                        } else {
-                          Navigator.of(context).pop(result);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text('Записати', style: TextStyle(fontSize: 18, color: Colors.white)),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+    builder:
+        (ctx) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: initialSize,
+          minChildSize: minSize,
+          maxChildSize: maxSize,
+          builder: (context, scrollController) {
+            return Material(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
-            ),
-          ),
-        );
-      },
-    ),
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: MediaQuery.of(
+                  context,
+                ).viewInsets.add(const EdgeInsets.all(16)),
+                child: StatefulBuilder(
+                  builder:
+                      (context, setState) => ListView(
+                        controller: scrollController,
+                        children: [
+                          if (fixedClientName == null) ...[
+                            const Text(
+                              'Ім’я клієнта',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            AutocompleteTextField(
+                              controller: nameController,
+                              suggestions: existingClients,
+                              placeholder: 'Введіть ім’я клієнта',
+                              enabled: true,
+                              onSelected: (value) {
+                                setState(() {
+                                  isNewClient =
+                                      !existingClients.any(
+                                        (name) =>
+                                            name.toLowerCase() ==
+                                            value.toLowerCase(),
+                                      );
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                hintText: 'Введіть ім’я клієнта',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          if (isNewClient) ...[
+                            const Text(
+                              'Телефон',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: phoneController,
+                              keyboardType: TextInputType.phone,
+                              decoration: const InputDecoration(
+                                hintText: 'Введіть номер телефону',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          if (initialComment == null) ...[
+                            const Text(
+                              'Коментар',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: commentController,
+                              maxLines: 2,
+                              decoration: const InputDecoration(
+                                hintText: 'Введіть коментар до запису',
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+                          const Text(
+                            'Дата запису',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today,
+                                            color: Colors.deepPurple,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            DateFormat.yMMMMd(
+                                              'uk_UA',
+                                            ).format(recordDate),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.access_time,
+                                            color: Colors.deepPurple,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            startTime != null && endTime != null
+                                                ? '${startTime!.inHours.toString().padLeft(2, '0')}:${(startTime!.inMinutes % 60).toString().padLeft(2, '0')} – '
+                                                    '${endTime!.inHours.toString().padLeft(2, '0')}:${(endTime!.inMinutes % 60).toString().padLeft(2, '0')}'
+                                                : 'Час не обрано',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                CupertinoButton(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  color: Colors.deepPurple,
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: const Text(
+                                    'Обрати дату і час',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  onPressed: () async {
+                                    if (allowDateSelection) {
+                                      final pickedDate =
+                                          await showDatePickerModal(
+                                            context,
+                                            recordDate,
+                                          );
+                                      if (pickedDate != null)
+                                        setState(() => recordDate = pickedDate);
+                                    }
+
+                                    final now = TimeOfDay.now();
+                                    final initialStart =
+                                        startTime ??
+                                        Duration(
+                                          hours: now.hour,
+                                          minutes: now.minute,
+                                        );
+
+                                    final selectedStart =
+                                        await showModalBottomSheet<Duration>(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder:
+                                              (_) => buildTimePickerModal(
+                                                context,
+                                                title: 'Обери годину початку',
+                                                initial: initialStart,
+                                              ),
+                                        );
+                                    if (selectedStart == null) return;
+                                    setState(() => startTime = selectedStart);
+
+                                    final initialEnd =
+                                        endTime != null &&
+                                                endTime! > selectedStart
+                                            ? endTime!
+                                            : selectedStart +
+                                                const Duration(hours: 1);
+
+                                    final selectedEnd =
+                                        await showModalBottomSheet<Duration>(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder:
+                                              (_) => buildTimePickerModal(
+                                                context,
+                                                title:
+                                                    'Обери годину закінчення',
+                                                initial: initialEnd,
+                                                minTime: selectedStart,
+                                              ),
+                                        );
+                                    if (selectedEnd == null) return;
+                                    setState(() => endTime = selectedEnd);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (startTime == null || endTime == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Оберіть час початку і завершення',
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                final fullStartDateTime = DateTime(
+                                  recordDate.year,
+                                  recordDate.month,
+                                  recordDate.day,
+                                  startTime!.inHours,
+                                  startTime!.inMinutes % 60,
+                                );
+                                final fullEndDateTime = DateTime(
+                                  recordDate.year,
+                                  recordDate.month,
+                                  recordDate.day,
+                                  endTime!.inHours,
+                                  endTime!.inMinutes % 60,
+                                );
+
+                                final rawClientName =
+                                    nameController.text.trim();
+                                final clientName = capitalizeWords(
+                                  rawClientName,
+                                );
+                                final phone = phoneController.text.trim();
+                                final comment = commentController.text.trim();
+                                final duration = endTime! - startTime!;
+
+                                final result = {
+                                  'scheduledDate': recordDate,
+                                  'startTime': TimeOfDay(
+                                    hour: startTime!.inHours,
+                                    minute: startTime!.inMinutes % 60,
+                                  ),
+                                  'endTime': TimeOfDay(
+                                    hour: endTime!.inHours,
+                                    minute: endTime!.inMinutes % 60,
+                                  ),
+                                  'clientName': clientName,
+                                  'phone': phone,
+                                  'comment': comment,
+                                  'isNewClient': isNewClient,
+                                };
+
+                                if (autoSubmitToFirestore) {
+                                  final clientRef = FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(user.uid)
+                                      .collection('clients')
+                                      .doc(clientName);
+
+                                  if (isNewClient) {
+                                    await clientRef.set({
+                                      'name': clientName,
+                                      'phoneNumber': phone,
+                                    });
+                                  }
+
+                                  final activityRef =
+                                      FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(user.uid)
+                                          .collection('activity')
+                                          .doc();
+
+                                  final activityId = activityRef.id;
+
+                                  await clientRef
+                                      .collection('comments')
+                                      .doc(activityId)
+                                      .set({
+                                        'comment': comment,
+                                        'date': DateTime.now(),
+                                        'activityId': activityId,
+                                      });
+
+                                  await activityRef.set({
+                                    'name': clientName,
+                                    'comment': comment,
+                                    'scheduledAt': fullStartDateTime,
+                                    'scheduledEnd': fullEndDateTime,
+                                    'duration': duration.inMinutes,
+                                    'date': DateTime.now(),
+                                    'userId': user.uid,
+                                  });
+
+                                  Navigator.of(context).pop({'success': true});
+                                } else {
+                                  Navigator.of(context).pop(result);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                              ),
+                              child: const Text(
+                                'Записати',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                ),
+              ),
+            );
+          },
+        ),
   );
 }

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:crm_app/widgets/string_utils.dart';
 
 class ClientInfoScreen extends StatefulWidget {
   final String clientName;
@@ -52,7 +53,7 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
 
       final data = doc.data();
       if (data != null) {
-        _nameController.text = data['name'] ?? '';
+        _nameController.text = capitalizeWords(data['name'] ?? '');
         _emailController.text = data['email'] ?? '';
 
         if (data['phoneNumbers'] is List) {
@@ -113,7 +114,7 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
 
     final phones = _phoneControllers.map((c) => c.text.trim()).where((p) => p.isNotEmpty).toList();
     final data = {
-      'name': _nameController.text.trim(),
+      'name': _nameController.text.trim().toLowerCase(),
       'email': _emailController.text.trim(),
       'phoneNumbers': phones,
     };
@@ -190,8 +191,9 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Інформація клієнта'),
-        backgroundColor: Colors.grey.shade50,
+        title: Text('Інформація клієнта',
+        style: const TextStyle(color: Colors.white),),
+        backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.black87,
         elevation: 0,
       ),

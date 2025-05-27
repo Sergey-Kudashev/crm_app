@@ -8,6 +8,8 @@ import 'package:crm_app/routes/app_routes.dart';
 import 'package:crm_app/widgets/add_client_modals.dart';
 import 'package:crm_app/widgets/app_drawer.dart';
 import 'package:crm_app/screens/client_details_screen.dart';
+import 'package:crm_app/widgets/string_utils.dart';
+import 'package:crm_app/widgets/сustom_action_dialog.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -381,34 +383,137 @@ class _CalendarScreenState extends State<CalendarScreen>
 
                       return GestureDetector(
                         onLongPress: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder:
-                                (ctx) => AlertDialog(
-                                  title: const Text('Видалити запис?'),
-                                  content: const Text(
-                                    'Ви точно хочете видалити цей запис?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(false),
-                                      child: const Text('Скасувати'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(true),
-                                      child: const Text('Видалити'),
-                                    ),
-                                  ],
-                                ),
+                          final selectedAction = await showCustomActionDialog(
+                            context,
+                            clientName: capitalizeWords(clientName),
+                            startTime: formatTime(startDate),
+                            endTime: formatTime(endDate),
                           );
 
-                          if (confirm == true) {
-                            await _deleteAppointmentFromClient(client);
+                          if (selectedAction == 'delete') {
+                            // Залишаємо вашу логіку видалення
+                            final confirm =
+                                await showCustomDeleteConfirmationDialog(
+                                  context,
+                                  title: 'Видалити запис?',
+                                  message:
+                                      'Ви точно хочете видалити цей запис?',
+                                );
+
+                            if (confirm == true) {
+                              await _deleteAppointmentFromClient(client);
+                            }
+                          } else if (selectedAction == 'edit') {
+                            // Підготувати параметри для модалки:
+                            final selectedDate = DateTime(
+                              startDate!.year,
+                              startDate.month,
+                              startDate.day,
+                            );
+
+                            final startDuration = Duration(
+                              hours: startDate.hour,
+                              minutes: startDate.minute,
+                            );
+                            final endDuration = Duration(
+                              hours: endDate!.hour,
+                              minutes: endDate.minute,
+                            );
+
+                            final result = await showAddClientCore(
+                              context: context,
+                              selectedDate: selectedDate,
+                              fixedClientName: clientName,
+                              initialComment: comment,
+                              allowDateSelection: true,
+                              autoSubmitToFirestore: false,
+                              // Потрібно трохи модифікувати showAddClientCore,
+                              // щоб додати початковий час startTime і endTime
+                              // (якщо в тебе там немає такої логіки — додай два додаткові параметри Duration? initialStartTime, Duration? initialEndTime)
+                              // і передавай їх у StatefulBuilder, щоб контролери та UI відобразили ці часи.
+                              initialStartTime: startDuration,
+                              initialEndTime: endDuration,
+                            );
+
+                            if (result != null) {
+                              final user = FirebaseAuth.instance.currentUser;
+                              if (user == null) return;
+
+                              final appointmentRef = FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(user.uid)
+                                  .collection('activity')
+                                  .doc(client.id);
+
+                              final newStartDate = DateTime(
+                                result['scheduledDate'].year,
+                                result['scheduledDate'].month,
+                                result['scheduledDate'].day,
+                                result['startTime'].hour,
+                                result['startTime'].minute,
+                              );
+
+                              final newEndDate = DateTime(
+                                result['scheduledDate'].year,
+                                result['scheduledDate'].month,
+                                result['scheduledDate'].day,
+                                result['endTime'].hour,
+                                result['endTime'].minute,
+                              );
+
+                              // Отримаємо старі дані
+                              final docSnapshot = await appointmentRef.get();
+                              final oldData = docSnapshot.data();
+                              bool isDateChanged = false;
+
+                              if (oldData != null) {
+                                final oldStart =
+                                    oldData['scheduledAt'] is Timestamp
+                                        ? (oldData['scheduledAt'] as Timestamp)
+                                            .toDate()
+                                        : DateTime.tryParse(
+                                              oldData['scheduledAt'] ?? '',
+                                            ) ??
+                                            DateTime(0);
+
+                                final oldEnd =
+                                    oldData['scheduledEnd'] is Timestamp
+                                        ? (oldData['scheduledEnd'] as Timestamp)
+                                            .toDate()
+                                        : DateTime.tryParse(
+                                              oldData['scheduledEnd'] ?? '',
+                                            ) ??
+                                            DateTime(0);
+
+                                if (oldStart != newStartDate ||
+                                    oldEnd != newEndDate) {
+                                  isDateChanged = true;
+                                }
+                              }
+
+                              // Формуємо дані для оновлення
+                              final updateData = {
+                                'name': result['clientName'],
+                                'comment': result['comment'],
+                                'scheduledAt': newStartDate,
+                                'scheduledEnd': newEndDate,
+                              };
+
+                              if (isDateChanged) {
+                                updateData['isRescheduled'] = true;
+                                updateData['date'] =
+                                    DateTime.now(); // оновлюємо дату активності, щоб показати наверху
+                              }
+
+                              await appointmentRef.update(updateData);
+
+                              await _fetchEvents();
+                            }
                           }
                         },
+
                         child: Card(
+                          color: Colors.deepPurple.shade50,
                           margin: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 8,
@@ -449,9 +554,8 @@ class _CalendarScreenState extends State<CalendarScreen>
                                 ),
                               ],
                             ),
-
                             title: Text(
-                              clientName,
+                              capitalizeWords(clientName),
                               style: const TextStyle(fontSize: 16),
                             ),
                             subtitle: Text(
