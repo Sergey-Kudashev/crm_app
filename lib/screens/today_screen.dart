@@ -8,6 +8,10 @@ import 'package:crm_app/widgets/date_picker_modal.dart';
 import 'package:crm_app/routes/app_routes.dart';
 import 'package:crm_app/widgets/string_utils.dart';
 import 'package:crm_app/screens/client_details_screen.dart';
+import 'package:crm_app/widgets/add_client_modals.dart';
+import 'package:crm_app/widgets/ios_fab_button.dart'; // шлях підкоригуй під свій
+import 'package:flutter/rendering.dart';
+import 'package:crm_app/widgets/сustom_action_dialog.dart';
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -18,6 +22,7 @@ class TodayScreen extends StatefulWidget {
 
 class _TodayScreenState extends State<TodayScreen> {
   final ScrollController _scrollController = ScrollController();
+  final ValueNotifier<bool> _fabVisible = ValueNotifier(true);
   static const double pixelsPerMinute = 2.0;
 
   DateTime _selectedDate = DateTime.now();
@@ -39,8 +44,80 @@ class _TodayScreenState extends State<TodayScreen> {
     return hslDark.toColor();
   }
 
-  int minHour = 7;
-  String? _draggingDocId;
+  Future<void> _fetchEvents() async {
+    setState(
+      () {},
+    ); // просто тригеримо оновлення, StreamBuilder сам підхопить зміни
+  }
+
+    Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final comment = doc['comment'] ?? '';
+      final name = doc['name'] ?? '';
+      final activityId = doc.id;
+
+      final clientRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('clients')
+          .doc(name);
+
+      // 🔥 1. Видалити activity-запис
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('activity')
+          .doc(activityId)
+          .delete();
+
+      // 🧹 2. Видалити коментар клієнта з таким самим ID
+      await clientRef.collection('comments').doc(activityId).delete();
+
+      // 📝 3. Додати "лог" про видалення
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('activity')
+          .add({
+            'name': name.toLowerCase(),
+            'comment': comment,
+            'date': DateTime.now(),
+            'userId': user.uid,
+            'edited': false,
+            'deleted': true,
+            'action': 'deleted_record',
+          });
+
+      await _fetchEvents();
+    } catch (e) {
+      print('Помилка при видаленні запису: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.reverse) {
+        _fabVisible.value = false;
+      } else if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.forward) {
+        _fabVisible.value = true;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _fabVisible.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -51,9 +128,9 @@ class _TodayScreenState extends State<TodayScreen> {
     }
     final now = DateTime.now();
     final isToday =
-        _selectedDate.year == DateTime.now().year &&
-        _selectedDate.month == DateTime.now().month &&
-        _selectedDate.day == DateTime.now().day;
+        _selectedDate.year == now.year &&
+        _selectedDate.month == now.month &&
+        _selectedDate.day == now.day;
     final nowLocal = isToday ? now : _selectedDate;
     final startOfDayUtc = DateTime.utc(
       nowLocal.year,
@@ -64,7 +141,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
     return Scaffold(
       drawer: const AppDrawer(currentRoute: AppRoutes.todayScreen),
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.grey.shade50,
         title: Row(
@@ -95,19 +172,11 @@ class _TodayScreenState extends State<TodayScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 20,
-                      // color: Colors.white,
-                    ),
+                    const Icon(Icons.calendar_today, size: 20),
                     const SizedBox(width: 6),
                     Text(
                       '${_selectedDate.day.toString().padLeft(2, '0')}.${_selectedDate.month.toString().padLeft(2, '0')}.${_selectedDate.year}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        // fontWeight: FontWeight.w500,
-                        // color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 18),
                     ),
                   ],
                 ),
@@ -115,7 +184,6 @@ class _TodayScreenState extends State<TodayScreen> {
             ),
           ],
         ),
-
         leading: Builder(
           builder:
               (context) => IconButton(
@@ -124,7 +192,6 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
         ),
       ),
-
       body: StreamBuilder<QuerySnapshot>(
         stream:
             FirebaseFirestore.instance
@@ -141,14 +208,13 @@ class _TodayScreenState extends State<TodayScreen> {
                 )
                 .orderBy('scheduledAt')
                 .snapshots(),
-
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
           final events = snapshot.data!.docs;
-          // int minHour = 7;
+          int minHour = 7;
           int maxHour = 20;
           for (final doc in events) {
             final start = (doc['scheduledAt'] as Timestamp).toDate().toLocal();
@@ -174,319 +240,505 @@ class _TodayScreenState extends State<TodayScreen> {
             }
           });
 
-          return SingleChildScrollView(
-            controller: _scrollController,
-            child: SizedBox(
-              height: totalHeight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Stack(
+          return Stack(
+            children: [
+              // Білий фон і основний контент
+              Container(
+                color: Colors.white,
+                child: Column(
                   children: [
-                    // Time grid
-                    Positioned.fill(
-                      child: Column(
-                        children: List.generate(totalMinutes ~/ 30, (index) {
-                          final total = minHour * 60 + index * 30;
-                          final hour = total ~/ 60;
-                          final minute = total % 60;
-                          final label =
-                              '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-                          return SizedBox(
-                            height: pixelsPerMinute * 30,
-                            child: Row(
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        child: SizedBox(
+                          height: totalHeight,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Stack(
                               children: [
-                                SizedBox(width: 40, child: Text(label)),
-                                const SizedBox(width: 12),
-                                const Expanded(
-                                  child: Divider(
-                                    thickness: 0.5,
-                                    color: Colors.grey,
+                                // Time grid
+                                Positioned.fill(
+                                  child: Column(
+                                    children: List.generate(totalMinutes ~/ 30, (
+                                      index,
+                                    ) {
+                                      final total = minHour * 60 + index * 30;
+                                      final hour = total ~/ 60;
+                                      final minute = total % 60;
+                                      final label =
+                                          '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+                                      return SizedBox(
+                                        height: pixelsPerMinute * 30,
+                                        child: Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 40,
+                                              child: Text(label),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            const Expanded(
+                                              child: Divider(
+                                                thickness: 0.5,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }),
                                   ),
                                 ),
+
+                                // Події
+                                ...events.map((doc) {
+                                  final rawStart = doc['scheduledAt'];
+                                  final rawEnd = doc['scheduledEnd'];
+                                  if (rawStart is! Timestamp ||
+                                      rawEnd is! Timestamp) {
+                                    return const SizedBox.shrink();
+                                  }
+
+                                  final scheduledAt =
+                                      rawStart.toDate().toLocal();
+                                  final scheduledEnd =
+                                      rawEnd.toDate().toLocal();
+                                  final name = doc['name'] ?? '';
+                                  final comment = doc['comment'] ?? '';
+                                  final docId = doc.id;
+
+                                  final top =
+                                      (scheduledAt.hour - minHour) *
+                                          60 *
+                                          pixelsPerMinute +
+                                      scheduledAt.minute * pixelsPerMinute;
+                                  double height =
+                                      scheduledEnd
+                                          .difference(scheduledAt)
+                                          .inMinutes *
+                                      pixelsPerMinute;
+                                  if (height <= 0) height = 30.0;
+
+                                  final color = getSoftRandomColor(name);
+                                  final textColor = darken(color, 0.40);
+
+                                  return Positioned(
+                                    top: top + 30,
+                                    left: 50,
+                                    right: 0,
+                                    height: height,
+                                    child: Stack(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: BackdropFilter(
+                                            filter: ImageFilter.blur(
+                                              sigmaX: 3,
+                                              sigmaY: 3,
+                                            ),
+                                            child: Container(
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              color: Colors.transparent,
+                                            ),
+                                          ),
+                                        ),
+
+                                        StatefulBuilder(
+                                          builder: (context, setStateSB) {
+                                            final isPressedNotifier =
+                                                ValueNotifier<bool>(false);
+
+                                            String formatTime(
+                                              DateTime? dateTime,
+                                            ) {
+                                              if (dateTime == null) return '--:--';
+                                              return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+                                            }
+
+                                            return GestureDetector(
+                                              onTapDown:
+                                                  (_) =>
+                                                      isPressedNotifier.value =
+                                                          true,
+                                              onTapUp:
+                                                  (_) =>
+                                                      isPressedNotifier.value =
+                                                          false,
+                                              onTapCancel:
+                                                  () =>
+                                                      isPressedNotifier.value =
+                                                          false,
+                                              onLongPressStart:
+                                                  (_) =>
+                                                      isPressedNotifier.value =
+                                                          true,
+                                              onLongPressEnd:
+                                                  (_) =>
+                                                      isPressedNotifier.value =
+                                                          false,
+                                              onLongPress: () async {
+                                                final selectedAction =
+                                                    await showCustomActionDialog(
+                                                      context,
+                                                      clientName:
+                                                          capitalizeWords(
+                                                            name,
+                                                          ), // або clientName
+                                                      startTime: formatTime(
+                                                        scheduledAt,
+                                                      ),
+                                                      endTime: formatTime(
+                                                        scheduledEnd,
+                                                      ),
+                                                    );
+                                                    isPressedNotifier.value = false;
+
+
+                                                if (selectedAction ==
+                                                    'delete') {
+                                                  final confirm =
+                                                      await showCustomDeleteConfirmationDialog(
+                                                        context,
+                                                        title:
+                                                            'Видалити запис?',
+                                                        message:
+                                                            'Ви точно хочете видалити цей запис?',
+                                                      );
+
+                                                  if (confirm == true) {
+                                                    await _deleteAppointmentFromClient(doc);
+                                                  }
+                                                } else if (selectedAction ==
+                                                    'edit') {
+                                                  // Далі йде твоя логіка редагування, яку ти вже маєш:
+                                                  final selectedDate = DateTime(
+                                                    scheduledAt.year,
+                                                    scheduledAt.month,
+                                                    scheduledAt.day,
+                                                  );
+                                                  final startDuration =
+                                                      Duration(
+                                                        hours: scheduledAt.hour,
+                                                        minutes:
+                                                            scheduledAt.minute,
+                                                      );
+                                                  final endDuration = Duration(
+                                                    hours: scheduledEnd.hour,
+                                                    minutes:
+                                                        scheduledEnd.minute,
+                                                  );
+
+                                                  final result =
+                                                      await showAddClientCore(
+                                                        context: context,
+                                                        selectedDate:
+                                                            selectedDate,
+                                                        fixedClientName: name,
+                                                        initialComment: comment,
+                                                        allowDateSelection:
+                                                            true,
+                                                        autoSubmitToFirestore:
+                                                            false,
+                                                        initialStartTime:
+                                                            startDuration,
+                                                        initialEndTime:
+                                                            endDuration,
+                                                      );
+
+                                                  if (result != null) {
+                                                    final user =
+                                                        FirebaseAuth
+                                                            .instance
+                                                            .currentUser;
+                                                    if (user == null) return;
+
+                                                    final appointmentRef =
+                                                        FirebaseFirestore
+                                                            .instance
+                                                            .collection('users')
+                                                            .doc(user.uid)
+                                                            .collection(
+                                                              'activity',
+                                                            )
+                                                            .doc(docId);
+
+                                                    final newStartDate = DateTime(
+                                                      result['scheduledDate']
+                                                          .year,
+                                                      result['scheduledDate']
+                                                          .month,
+                                                      result['scheduledDate']
+                                                          .day,
+                                                      result['startTime'].hour,
+                                                      result['startTime']
+                                                          .minute,
+                                                    );
+
+                                                    final newEndDate = DateTime(
+                                                      result['scheduledDate']
+                                                          .year,
+                                                      result['scheduledDate']
+                                                          .month,
+                                                      result['scheduledDate']
+                                                          .day,
+                                                      result['endTime'].hour,
+                                                      result['endTime'].minute,
+                                                    );
+
+                                                    final docSnapshot =
+                                                        await appointmentRef
+                                                            .get();
+                                                    final oldData =
+                                                        docSnapshot.data();
+                                                    bool isDateChanged = false;
+
+                                                    if (oldData != null) {
+                                                      final oldStart =
+                                                          oldData['scheduledAt']
+                                                                  is Timestamp
+                                                              ? (oldData['scheduledAt']
+                                                                      as Timestamp)
+                                                                  .toDate()
+                                                              : DateTime.tryParse(
+                                                                    oldData['scheduledAt'] ??
+                                                                        '',
+                                                                  ) ??
+                                                                  DateTime(0);
+
+                                                      final oldEnd =
+                                                          oldData['scheduledEnd']
+                                                                  is Timestamp
+                                                              ? (oldData['scheduledEnd']
+                                                                      as Timestamp)
+                                                                  .toDate()
+                                                              : DateTime.tryParse(
+                                                                    oldData['scheduledEnd'] ??
+                                                                        '',
+                                                                  ) ??
+                                                                  DateTime(0);
+
+                                                      if (oldStart !=
+                                                              newStartDate ||
+                                                          oldEnd !=
+                                                              newEndDate) {
+                                                        isDateChanged = true;
+                                                      }
+                                                    }
+
+                                                    final updateData = {
+                                                      'name': result['clientName'].toLowerCase(),
+                                                      'comment':
+                                                          result['comment'],
+                                                      'scheduledAt':
+                                                          newStartDate,
+                                                      'scheduledEnd':
+                                                          newEndDate,
+                                                    };
+
+                                                    if (isDateChanged) {
+                                                      updateData['isRescheduled'] =
+                                                          true;
+                                                      updateData['date'] =
+                                                          DateTime.now();
+                                                    }
+
+                                                    await appointmentRef.update(
+                                                      updateData,
+                                                    );
+                                                    await _fetchEvents();
+                                                  }
+                                                }
+                                              },
+
+                                              onTap: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder:
+                                                        (_) =>
+                                                            ClientDetailsScreen(
+                                                              clientName: name,
+                                                            ),
+                                                  ),
+                                                );
+                                              },
+                                              child: ValueListenableBuilder<
+                                                bool
+                                              >(
+                                                valueListenable:
+                                                    isPressedNotifier,
+                                                builder: (
+                                                  context,
+                                                  isPressed,
+                                                  child,
+                                                ) {
+                                                  return AnimatedScale(
+                                                    scale:
+                                                        isPressed ? 1.05 : 1.0,
+                                                    duration: const Duration(
+                                                      milliseconds: 150,
+                                                    ),
+                                                    curve: Curves.easeInOut,
+                                                    child: child,
+                                                  );
+                                                },
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    8,
+                                                  ),
+                                                  width: double.infinity,
+                                                  decoration: BoxDecoration(
+                                                    color: color,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        capitalizeWords(name),
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: textColor,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        comment,
+                                                        maxLines: 1,
+                                                        overflow:
+                                                            TextOverflow
+                                                                .ellipsis,
+                                                        style: TextStyle(
+                                                          color: textColor,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+
+                                // 🔴 Поточна година
+                                if (isToday)
+                                  Positioned(
+                                    top:
+                                        nowTop.clamp(0.0, totalHeight - 1) + 20,
+                                    left: -4,
+                                    right: 0,
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        const SizedBox(width: 4),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 0,
+                                            vertical: 0,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color.fromARGB(
+                                              255,
+                                              255,
+                                              255,
+                                              255,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  255,
+                                                  255,
+                                                  255,
+                                                ),
+                                                blurRadius: 5,
+                                                spreadRadius: 3,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
+                                            '${nowLocal.hour.toString().padLeft(2, '0')}:${nowLocal.minute.toString().padLeft(2, '0')}',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Color.fromARGB(
+                                                255,
+                                                255,
+                                                0,
+                                                0,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          width: 4,
+                                          height: 10,
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            borderRadius: BorderRadius.circular(
+                                              2,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             ),
-                          );
-                        }),
-                      ),
-                    ),
-
-                    // Події
-                    ...events.map((doc) {
-final rawStart = doc['scheduledAt'];
-final rawEnd = doc['scheduledEnd'];
-if (rawStart is! Timestamp || rawEnd is! Timestamp) {
-  return const SizedBox.shrink();
-}
-
-final scheduledAt = rawStart.toDate().toLocal();
-final scheduledEnd = rawEnd.toDate().toLocal();
-final name = doc['name'] ?? '';
-final comment = doc['comment'] ?? '';
-final docId = doc.id;
-
-final top =
-    (scheduledAt.hour - minHour) * 60 * pixelsPerMinute +
-    scheduledAt.minute * pixelsPerMinute;
-double height =
-    scheduledEnd.difference(scheduledAt).inMinutes * pixelsPerMinute;
-if (height <= 0) height = 30.0;
-
-final color = getSoftRandomColor(name);
-final textColor = darken(color, 0.40);
-
-bool isDragging = _draggingDocId == docId;
-
-return Positioned(
-  top: top + 30,
-  left: 50,
-  right: 0,
-  height: height,
-  child: LongPressDraggable<String>(
-    data: docId,
-    onDragStarted: () {
-      setState(() {
-        _draggingDocId = docId;
-      });
-    },
-    onDraggableCanceled: (_, __) {
-      setState(() {
-        _draggingDocId = null;
-      });
-    },
-    onDragEnd: (_) {
-      setState(() {
-        _draggingDocId = null;
-      });
-    },
-    feedback: Material(
-      color: Colors.transparent,
-      child: Container(
-        width: MediaQuery.of(context).size.width - 50 - 16, // ширина зліва і падінг
-        height: height,
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              capitalizeWords(name),
-              style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-            ),
-            Text(
-              comment,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: textColor),
-            ),
-          ],
-        ),
-      ),
-    ),
-    childWhenDragging: Container(), // ховаємо оригінал під час drag
-    child: Stack(
-      children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ClientDetailsScreen(clientName: name),
-              ),
-            );
-          },
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  capitalizeWords(name),
-                  style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-                ),
-                Text(
-                  comment,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: textColor),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (isDragging)
-          Positioned(
-            top: 4,
-            right: 4,
-            child: GestureDetector(
-              onTap: () async {
-                // Видалити подію
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(user.uid)
-                      .collection('activity')
-                      .doc(docId)
-                      .delete();
-                  setState(() {
-                    _draggingDocId = null;
-                  });
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.8),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(4),
-                child: const Icon(Icons.close, size: 18, color: Colors.white),
-              ),
-            ),
-          ),
-      ],
-    ),
-  ),
-);
-
-                    }),
-                    Positioned.fill(
-  child: DragTarget<String>(
-    onWillAccept: (data) => data != null,
-    onAcceptWithDetails: (details) async {
-      final docId = details.data;
-      final offset = details.offset;
-
-      final box = context.findRenderObject() as RenderBox;
-      final localOffset = box.globalToLocal(offset);
-
-      // Тобі потрібно мати доступ до minHour тут, використай глобальну змінну
-      final minTop = 30.0; // відповідно до top + 30 у Positioned
-      final pixelsFromTop = (localOffset.dy - minTop).clamp(0.0, double.infinity);
-
-      final newMinutes = (pixelsFromTop / pixelsPerMinute).round();
-      final newHour = minHour + (newMinutes ~/ 60);
-      final newMinute = newMinutes % 60;
-
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      final docRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('activity')
-          .doc(docId);
-
-      // Спершу отримай існуючий документ щоб визначити duration
-      final snapshot = await docRef.get();
-      if (!snapshot.exists) return;
-      final data = snapshot.data()!;
-      final rawStart = data['scheduledAt'];
-      final rawEnd = data['scheduledEnd'];
-
-      if (rawStart is! Timestamp || rawEnd is! Timestamp) return;
-
-      final durationInMinutes =
-          rawEnd.toDate().toLocal().difference(rawStart.toDate().toLocal()).inMinutes;
-
-      final newStartDateTime = DateTime(
-        _selectedDate.year,
-        _selectedDate.month,
-        _selectedDate.day,
-        newHour,
-        newMinute,
-      );
-
-      final newEndDateTime = newStartDateTime.add(Duration(minutes: durationInMinutes));
-
-      await docRef.update({
-        'scheduledAt': newStartDateTime,
-        'scheduledEnd': newEndDateTime,
-        'date': DateTime.now(), // щоб івент сплив наверх
-      });
-
-      setState(() {
-        _draggingDocId = null;
-      });
-    },
-    builder: (context, candidateData, rejectedData) {
-      return Container();
-    },
-  ),
-),
-
-
-                    // 🔴 Поточна година
-                    if (isToday)
-                      Positioned(
-                        top: nowTop.clamp(0.0, totalHeight - 1) + 20,
-                        left: -4,
-                        right: 0,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const SizedBox(width: 4),
-
-                            // Контейнер з зеленим фоном тільки під текстом часу
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 0,
-                                vertical: 0,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color.fromARGB(255, 255, 255, 255),
-                                // borderRadius: BorderRadius.circular(4),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color.fromARGB(
-                                      255,
-                                      255,
-                                      255,
-                                      255,
-                                    ), // колір тіні
-                                    blurRadius: 5, // розмиття тіні
-                                    spreadRadius: 3, // розмір тіні
-                                    // offset: const Offset(0, 2), // зміщення тіні
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                '${nowLocal.hour.toString().padLeft(2, '0')}:${nowLocal.minute.toString().padLeft(2, '0')}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 255, 0, 0),
-                                  // fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 6),
-
-                            Container(
-                              width: 4,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-
-                    // else
-                    //   const SizedBox.shrink(),
+                    ),
                   ],
                 ),
               ),
-            ),
+
+              // Позиціонована кнопка зверху в Stack, без білого фону під нею
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: _fabVisible,
+                  builder: (context, visible, _) {
+                    return AnimatedSlide(
+                      offset: visible ? Offset.zero : const Offset(0, 2),
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      child: AnimatedOpacity(
+                        opacity: visible ? 1 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: IOSFloatingActionButton(
+                          text: 'Записати клієнта',
+                          onPressed: () async {
+                            final wasAdded =
+                                await showAddClientModalForCalendar(
+                                  context,
+                                  _selectedDate,
+                                );
+                            if (wasAdded) {
+                              await _fetchEvents();
+                              setState(() {});
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),

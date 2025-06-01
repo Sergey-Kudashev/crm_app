@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:crm_app/widgets/string_utils.dart';
+import 'package:crm_app/widgets/custom_snackbar.dart';
 
 class ClientInfoScreen extends StatefulWidget {
-  final String clientName;
+  final String clientName; // Это именно ID документа!
 
   const ClientInfoScreen({super.key, required this.clientName});
 
@@ -17,11 +17,16 @@ class ClientInfoScreen extends StatefulWidget {
 class _ClientInfoScreenState extends State<ClientInfoScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final List<TextEditingController> _phoneControllers = [TextEditingController()];
+  final List<TextEditingController> _phoneControllers = [
+    TextEditingController(),
+  ];
 
   bool isLoading = true;
-  List<Map<String, dynamic>> comments = [];
-  List<Map<String, dynamic>> activities = [];
+  bool isChanged = false;
+
+  String initialName = '';
+  String initialEmail = '';
+  List<String> initialPhones = [];
 
   @override
   void initState() {
@@ -44,60 +49,35 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('clients')
-          .doc(widget.clientName)
-          .get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('clients')
+              .doc(widget.clientName)
+              .get();
 
       final data = doc.data();
       if (data != null) {
-        _nameController.text = capitalizeWords(data['name'] ?? '');
-        _emailController.text = data['email'] ?? '';
+        initialName = (data['name'] ?? '').toString().toLowerCase();
+        _nameController.text = capitalizeWords(initialName);
+
+        initialEmail = (data['email'] ?? '').toString();
+        _emailController.text = initialEmail;
 
         if (data['phoneNumbers'] is List) {
           final phones = List<String>.from(data['phoneNumbers']);
+          initialPhones = phones;
           _phoneControllers.clear();
-          _phoneControllers.addAll(phones.map((p) => TextEditingController(text: p)));
+          _phoneControllers.addAll(
+            phones.map((p) => TextEditingController(text: p)),
+          );
         } else if (data['phoneNumber'] != null) {
+          initialPhones = [data['phoneNumber']];
           _phoneControllers[0].text = data['phoneNumber'];
+        } else {
+          initialPhones = [];
         }
-
-        final userId = user.uid;
-
-        final commentsSnapshot = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('clients')
-            .doc(widget.clientName)
-            .collection('comments')
-            .orderBy('date', descending: true)
-            .get();
-
-        comments = commentsSnapshot.docs.map((doc) {
-          final data = doc.data();
-          return {
-            'comment': data['comment'],
-            'date': (data['date'] as Timestamp).toDate(),
-          };
-        }).toList();
-
-        final activitySnapshot = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('activity')
-            .where('name', isEqualTo: widget.clientName)
-            .orderBy('createdAt', descending: true)
-            .get();
-
-        activities = activitySnapshot.docs.map((doc) {
-          final data = doc.data();
-          return {
-            'comment': data['comment'],
-            'date': (data['createdAt'] as Timestamp).toDate(),
-          };
-        }).toList();
       }
 
       setState(() {
@@ -112,24 +92,110 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final phones = _phoneControllers.map((c) => c.text.trim()).where((p) => p.isNotEmpty).toList();
-    final data = {
-      'name': _nameController.text.trim().toLowerCase(),
-      'email': _emailController.text.trim(),
-      'phoneNumbers': phones,
-    };
+    final phones =
+        _phoneControllers
+            .map((c) => c.text.trim())
+            .where((p) => p.isNotEmpty)
+            .toList();
+    final updatedEmail = _emailController.text.trim();
 
-    await FirebaseFirestore.instance
+    final clientDocRef = FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .collection('clients')
-        .doc(widget.clientName)
-        .update(data);
+        .doc(widget.clientName.toLowerCase());
+
+    await clientDocRef.update({
+      'name': initialName, // Залишаємо незмінним
+      'email': updatedEmail,
+      'phoneNumbers': phones,
+    });
+
+    // Оновлюємо активність, якщо змінилось ім'я (але у тебе воно заблоковане)
+    final activityCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('activity');
+
+    final querySnapshot =
+        await activityCollection.where('name', isEqualTo: initialName).get();
+
+    for (final doc in querySnapshot.docs) {
+      await doc.reference.update({'name': initialName});
+    }
+
+    if (mounted) {
+      setState(() {
+        isChanged = false;
+      });
+
+      showCustomSnackBar(context, 'Дані успішно збережені!', isSuccess: true);
+    }
+  }
+
+  Future<void> _deleteClient() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Видалити клієнта?'),
+            content: const Text(
+              'Ця дія безповоротна. Ви впевнені, що хочете видалити цього клієнта?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Скасувати'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(
+                  'Видалити',
+                  style: TextStyle(color: Color.fromARGB(255, 189, 0, 0)),
+                ),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm != true) return;
+
+    // Видаляємо з clients
+    final clientRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('clients')
+        .doc(widget.clientName);
+
+    await clientRef.delete();
+
+    // Видаляємо всі activity
+    final activityQuery =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('activity')
+            .where('name', isEqualTo: initialName)
+            .get();
+
+    for (final doc in activityQuery.docs) {
+      await doc.reference.delete();
+    }
+
+    if (mounted) {
+      showCustomSnackBar(context, 'Клієнта успішно видалено!', isSuccess: true);
+      Navigator.of(context).pop(); // Повертаємо користувача назад
+    }
   }
 
   void _addPhoneField() {
     setState(() {
-      _phoneControllers.add(TextEditingController());
+      final controller = TextEditingController();
+      controller.addListener(_onFieldChanged);
+      _phoneControllers.add(controller);
     });
   }
 
@@ -154,90 +220,121 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
     );
   }
 
-  Widget _buildEntry(Map<String, dynamic> entry, {bool isPast = false}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isPast ? Colors.grey.shade200 : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            DateFormat('dd.MM.yyyy, HH:mm').format(entry['date']),
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            entry['comment'] ?? '',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Colors.black87,
-              decoration: TextDecoration.none,
-            ),
-          ),
-        ],
-      ),
+  bool _listEquals(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  void _onFieldChanged() {
+    final newEmail = _emailController.text.trim();
+    final newPhones =
+        _phoneControllers
+            .map((c) => c.text.trim())
+            .where((p) => p.isNotEmpty)
+            .toList();
+
+    final emailChanged = newEmail != initialEmail;
+    final phonesChanged = !_listEquals(newPhones, initialPhones);
+
+    if (emailChanged || phonesChanged) {
+      if (!isChanged) {
+        setState(() {
+          isChanged = true;
+        });
+      }
+    } else {
+      if (isChanged) {
+        setState(() {
+          isChanged = false;
+        });
+      }
+    }
+  }
+
+  void _showNameChangeSnackBar() {
+    showCustomSnackBar(
+      context,
+      'Імʼя клієнта змінювати не можна',
+      isSuccess: false,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    _emailController.addListener(_onFieldChanged);
+    for (var c in _phoneControllers) {
+      c.addListener(_onFieldChanged);
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Інформація клієнта',
-        style: const TextStyle(color: Colors.white),),
+        title: const Text(
+          'Інформація клієнта',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.black87,
         elevation: 0,
       ),
       backgroundColor: Colors.white,
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel('Імʼя'),
-                    TextField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLabel('Імʼя'),
+                      GestureDetector(
+                        onTap: _showNameChangeSnackBar,
+                        child: AbsorbPointer(
+                          child: TextField(
+                            controller: _nameController,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.grey.shade300,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black54,
+                            ),
+                            enabled: false,
+                          ),
                         ),
                       ),
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
-                      onEditingComplete: _saveChanges,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildLabel('Емейл'),
-                    TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                      const SizedBox(height: 16),
+                      _buildLabel('Емейл'),
+                      TextField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
                         ),
                       ),
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
-                      onEditingComplete: _saveChanges,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildLabel('Телефон(и)'),
-                    ..._phoneControllers.map((controller) => Padding(
+                      const SizedBox(height: 16),
+                      _buildLabel('Телефон(и)'),
+                      ..._phoneControllers.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final controller = entry.value;
+
+                        return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Row(
                             children: [
@@ -253,36 +350,96 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
                                       borderSide: BorderSide.none,
                                     ),
                                   ),
-                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
-                                  onEditingComplete: _saveChanges,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black87,
+                                  ),
                                 ),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.phone),
                                 onPressed: () => _callPhone(controller.text),
                               ),
+                              if (index > 0)
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: Colors.redAccent,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _phoneControllers.removeAt(index);
+                                      _onFieldChanged();
+                                    });
+                                  },
+                                ),
                             ],
                           ),
-                        )),
-                    TextButton(
-                      onPressed: _addPhoneField,
-                      child: const Text(
-                        '+ Додати номер телефону',
-                        style: TextStyle(fontSize: 15, color: Colors.blue),
+                        );
+                      }),
+
+                      TextButton(
+                        onPressed: _addPhoneField,
+                        child: const Text(
+                          '+ Додати номер телефону',
+                          style: TextStyle(fontSize: 15, color: Colors.blue),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text('Записи на дату', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 16),
-                    ...activities.map((entry) => _buildEntry(entry, isPast: entry['date'].isBefore(DateTime.now()))),
-                    const SizedBox(height: 32),
-                    const Text('Коментарі', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 16),
-                    ...comments.map((entry) => _buildEntry(entry)),
-                  ],
+                      const SizedBox(height: 32),
+                      TextButton(
+                        onPressed: isChanged ? _saveChanges : null,
+                        style: TextButton.styleFrom(
+                          backgroundColor:
+                              isChanged
+                                  ? Colors.deepPurple
+                                  : const Color.fromARGB(255, 194, 194, 194),
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 32,
+                          ),
+                        ),
+                        child: const Text(
+                          'Зберегти',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 🔥 КНОПКА ВИДАЛЕННЯ
+                      TextButton(
+                        onPressed: _deleteClient,
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 189, 0, 0),
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 32,
+                          ),
+                        ),
+                        child: const Text(
+                          'Видалити клієнта',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
     );
   }
 }

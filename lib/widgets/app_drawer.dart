@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:crm_app/routes/app_routes.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class AppDrawer extends StatelessWidget {
   final String currentRoute;
@@ -24,11 +25,12 @@ class AppDrawer extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4),
         child: Material(
           borderRadius: BorderRadius.circular(12),
-          color: isSelected ? Colors.blue.shade50 : Colors.transparent,
+          color: isSelected ? Colors.deepPurple : Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap:
-                onTap ??
+            splashColor: Colors.deepPurple.withOpacity(0.3),
+            highlightColor: Colors.deepPurple.withOpacity(0.1),
+            onTap: onTap ??
                 () {
                   Navigator.pop(context);
                   if (currentRoute != routeName) {
@@ -36,17 +38,23 @@ class AppDrawer extends StatelessWidget {
                   }
                 },
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Row(
                 children: [
-                  Icon(icon, color: isSelected ? Colors.blue : Colors.black),
-                  const SizedBox(width: 12),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: isSelected ? Colors.blue : Colors.black,
+                  Icon(
+                    icon,
+                    color: isSelected ? Colors.white : Colors.black87,
+                    size: 26,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.white : Colors.black87,
+                      ),
                     ),
                   ),
                 ],
@@ -98,27 +106,35 @@ class AppDrawer extends StatelessWidget {
             ),
             buildDrawerItem(
               title: 'Головна',
-              icon: Icons.home,
+              icon: LucideIcons.home,
               routeName: AppRoutes.home,
             ),
             buildDrawerItem(
               title: 'Клієнти',
-              icon: Icons.people,
+              icon: LucideIcons.users,
               routeName: AppRoutes.clients,
             ),
             buildDrawerItem(
               title: 'Календар',
-              icon: Icons.calendar_month,
+              icon: LucideIcons.calendarDays,
               routeName: AppRoutes.calendar,
             ),
             buildDrawerItem(
               title: 'Сьогодні',
-              icon: Icons.today,
+              icon: LucideIcons.calendarClock,
               routeName: AppRoutes.todayScreen,
             ),
+            const Spacer(),
+                        Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Divider(
+                color: Colors.grey.shade300,
+                thickness: 1,
+              ),
+            ), // Тепер кнопка «Вийти» внизу
             buildDrawerItem(
               title: 'Вийти',
-              icon: Icons.logout,
+              icon: LucideIcons.logOut,
               routeName: '',
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
@@ -129,6 +145,7 @@ class AppDrawer extends StatelessWidget {
                 );
               },
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

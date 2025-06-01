@@ -35,8 +35,11 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Клієнти'),
-      backgroundColor: Colors.grey.shade50,),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      appBar: AppBar(
+        title: const Text('Клієнти'),
+        backgroundColor: Colors.grey.shade50,
+      ),
       drawer: const AppDrawer(currentRoute: AppRoutes.clients),
       body: Column(
         children: [
@@ -52,7 +55,7 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
                 _debounce = Timer(const Duration(milliseconds: 500), () {
                   if (mounted) {
                     setState(() {
-                      _searchText = value.toLowerCase(); // Keep case for server-side search
+                      _searchText = value.toLowerCase();
                     });
                   }
                 });
@@ -89,25 +92,41 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
                   return const Center(child: Text('Клієнтів не знайдено 🧐'));
                 }
 
-                // If we reach here, data is available, no error, and not waiting.
-                final clients = snapshot.data!.docs.map((doc) => Client.fromDocument(doc)).toList();
+                final clients = snapshot.data!.docs
+                    .map((doc) => Client.fromDocument(doc))
+                    .toList();
 
-                // Grouping logic remains, will operate on server-sorted/filtered data
+                // Групуємо за першою літерою
                 final Map<String, List<Client>> grouped = {};
                 for (var client in clients) {
                   final letter = client.name[0].toUpperCase();
                   grouped.putIfAbsent(letter, () => []).add(client);
                 }
 
+                // Сортування груп: кирилиця зверху, латиниця знизу
+                final sortedGroups = grouped.entries.toList()
+                  ..sort((a, b) {
+                    final isCyrillicA = _isCyrillic(a.key);
+                    final isCyrillicB = _isCyrillic(b.key);
+                    if (isCyrillicA && !isCyrillicB) {
+                      return -1; // кирилиця йде вгору
+                    } else if (!isCyrillicA && isCyrillicB) {
+                      return 1;
+                    } else {
+                      return a.key.compareTo(b.key);
+                    }
+                  });
+
                 return ListView(
-                  children: grouped.entries.map((entry) {
+                  children: sortedGroups.map((entry) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           child: Text(
-                            entry.key, // This is the first letter for grouping
+                            entry.key,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -120,11 +139,13 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
                               onTap: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (_) => ClientDetailsScreen(clientName: client.name),
+                                    builder: (_) => ClientDetailsScreen(
+                                      clientName: client.name,
+                                    ),
                                   ),
                                 );
                               },
-                            ))
+                            )),
                       ],
                     );
                   }).toList(),
@@ -135,5 +156,12 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
         ],
       ),
     );
+  }
+
+  bool _isCyrillic(String char) {
+    if (char.isEmpty) return false;
+    final codeUnit = char.codeUnitAt(0);
+    return (codeUnit >= 0x0400 && codeUnit <= 0x04FF) || // Cyrillic block
+           (codeUnit >= 0x0500 && codeUnit <= 0x052F);  // Cyrillic supplement
   }
 }

@@ -1,5 +1,3 @@
-// ✅ 1. ДЛЯ AddClientScreen: Повертає Map, дозволяє обрати дату
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,6 +7,7 @@ import '/widgets/time_range_picker_modal.dart';
 import '/widgets/date_picker_modal.dart';
 import 'package:crm_app/widgets/string_utils.dart';
 import 'package:intl/intl.dart';
+import 'package:crm_app/widgets/custom_snackbar.dart';
 
 Future<Map<String, dynamic>?> showAddClientModalForScreen(
   BuildContext context,
@@ -26,8 +25,6 @@ Future<Map<String, dynamic>?> showAddClientModalForScreen(
   );
 }
 
-// ✅ 2. ДЛЯ CalendarScreen: Одразу записує в базу, без вибору дати
-
 Future<bool> showAddClientModalForCalendar(
   BuildContext context,
   DateTime selectedDate,
@@ -41,7 +38,6 @@ Future<bool> showAddClientModalForCalendar(
   return result?['success'] == true;
 }
 
-// 🔧 ОСНОВНА ЛОГІКА (shared core)
 Future<Map<String, dynamic>?> showAddClientCore({
   required BuildContext context,
   required DateTime selectedDate,
@@ -49,8 +45,8 @@ Future<Map<String, dynamic>?> showAddClientCore({
   String? initialComment,
   required bool allowDateSelection,
   required bool autoSubmitToFirestore,
-  Duration? initialStartTime, // <-- додати
-  Duration? initialEndTime, // <-- додати
+  Duration? initialStartTime, // <-- додано
+  Duration? initialEndTime, // <-- додано
 }) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return null;
@@ -68,7 +64,8 @@ Future<Map<String, dynamic>?> showAddClientCore({
   final nameController = TextEditingController(text: fixedClientName);
   final commentController = TextEditingController(text: initialComment);
   final phoneController = TextEditingController();
-  final initialSize = fixedClientName == null ? 0.55 : 0.4;
+
+  final initialSize = fixedClientName == null ? 0.6 : 0.4;
   final maxSize = fixedClientName == null ? 0.7 : 0.5;
   final minSize = 0.3;
 
@@ -76,6 +73,9 @@ Future<Map<String, dynamic>?> showAddClientCore({
   Duration? endTime = initialEndTime;
   DateTime recordDate = selectedDate;
   bool isNewClient = fixedClientName == null;
+
+  // Зберігаємо початковий коментар для порівняння
+  final originalComment = initialComment ?? '';
 
   return await showModalBottomSheet<Map<String, dynamic>>(
     context: context,
@@ -144,21 +144,22 @@ Future<Map<String, dynamic>?> showAddClientCore({
                             ),
                             const SizedBox(height: 16),
                           ],
-                          if (initialComment == null) ...[
-                            const Text(
-                              'Коментар',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+
+                          // Поле коментаря завжди показуємо
+                          const Text(
+                            'Коментар',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: commentController,
+                            maxLines: 2,
+                            decoration: const InputDecoration(
+                              hintText: 'Введіть коментар до запису',
                             ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: commentController,
-                              maxLines: 2,
-                              decoration: const InputDecoration(
-                                hintText: 'Введіть коментар до запису',
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                          ],
+                          ),
+                          const SizedBox(height: 24),
+
                           const Text(
                             'Дата запису',
                             style: TextStyle(fontWeight: FontWeight.bold),
@@ -295,12 +296,31 @@ Future<Map<String, dynamic>?> showAddClientCore({
                             child: ElevatedButton(
                               onPressed: () async {
                                 if (startTime == null || endTime == null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Оберіть час початку і завершення',
-                                      ),
-                                    ),
+                                  showCustomSnackBar(
+                                    context,
+                                    'Оберіть час початку і завершення',
+                                    isSuccess: false,
+                                  );
+                                  return;
+                                }
+
+                                final rawClientName =
+                                    nameController.text.trim();
+                                if (rawClientName.isEmpty) {
+                                  showCustomSnackBar(
+                                    context,
+                                    'Будь ласка, введіть ім’я клієнта.',
+                                    isSuccess: false,
+                                  );
+                                  return;
+                                }
+
+                                final comment = commentController.text.trim();
+                                if (comment.isEmpty) {
+                                  showCustomSnackBar(
+                                    context,
+                                    'Будь ласка, введіть коментар.',
+                                    isSuccess: false,
                                   );
                                   return;
                                 }
@@ -320,14 +340,13 @@ Future<Map<String, dynamic>?> showAddClientCore({
                                   endTime!.inMinutes % 60,
                                 );
 
-                                final rawClientName =
-                                    nameController.text.trim();
-                                final clientName = capitalizeWords(
-                                  rawClientName,
-                                );
+                                final clientName = rawClientName.toLowerCase();
                                 final phone = phoneController.text.trim();
-                                final comment = commentController.text.trim();
                                 final duration = endTime! - startTime!;
+
+                                // Логіка оновлення коментаря, якщо змінився
+                                final commentChanged =
+                                    comment != originalComment;
 
                                 final result = {
                                   'scheduledDate': recordDate,
@@ -339,7 +358,7 @@ Future<Map<String, dynamic>?> showAddClientCore({
                                     hour: endTime!.inHours,
                                     minute: endTime!.inMinutes % 60,
                                   ),
-                                  'clientName': clientName,
+                                  'clientName': capitalizeWords(rawClientName),
                                   'phone': phone,
                                   'comment': comment,
                                   'isNewClient': isNewClient,
@@ -368,14 +387,16 @@ Future<Map<String, dynamic>?> showAddClientCore({
 
                                   final activityId = activityRef.id;
 
-                                  await clientRef
-                                      .collection('comments')
-                                      .doc(activityId)
-                                      .set({
-                                        'comment': comment,
-                                        'date': DateTime.now(),
-                                        'activityId': activityId,
-                                      });
+                                  if (commentChanged) {
+                                    await clientRef
+                                        .collection('comments')
+                                        .doc(activityId)
+                                        .set({
+                                          'comment': comment,
+                                          'date': DateTime.now(),
+                                          'activityId': activityId,
+                                        });
+                                  }
 
                                   await activityRef.set({
                                     'name': clientName,

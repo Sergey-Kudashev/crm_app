@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter/rendering.dart';
+import 'package:flutter/rendering.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +10,7 @@ import 'package:crm_app/widgets/app_drawer.dart';
 import 'package:crm_app/screens/client_details_screen.dart';
 import 'package:crm_app/widgets/string_utils.dart';
 import 'package:crm_app/widgets/сustom_action_dialog.dart';
+import 'package:crm_app/widgets/ios_fab_button.dart'; // шлях підкоригуй під свій
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -31,6 +32,7 @@ class _CalendarScreenState extends State<CalendarScreen>
   late final ValueNotifier<double> _calendarHeight;
   final double _maxCalendarHeight = 350;
   final double _minCalendarHeight = 132;
+  final ValueNotifier<bool> _fabVisible = ValueNotifier(true);
 
   @override
   void initState() {
@@ -41,12 +43,22 @@ class _CalendarScreenState extends State<CalendarScreen>
           : _minCalendarHeight,
     );
     _scrollController = ScrollController();
+    _scrollController.addListener(() {
+      if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.reverse) {
+        _fabVisible.value = false;
+      } else if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.forward) {
+        _fabVisible.value = true;
+      }
+    });
     _fetchEvents();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _fabVisible.dispose();
     _calendarHeight.dispose();
     super.dispose();
   }
@@ -126,7 +138,7 @@ class _CalendarScreenState extends State<CalendarScreen>
           .doc(user.uid)
           .collection('activity')
           .add({
-            'name': name,
+            'name': name.toLowerCase(),
             'comment': comment,
             'date': DateTime.now(),
             'userId': user.uid,
@@ -199,415 +211,433 @@ class _CalendarScreenState extends State<CalendarScreen>
         ],
       ),
       drawer: const AppDrawer(currentRoute: AppRoutes.calendar),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
         children: [
-          AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: Container(
-              key: _calendarSizeKey,
-              child: TableCalendar(
-                key: _calendarKey,
-                calendarFormat: _calendarFormat,
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                startingDayOfWeek: StartingDayOfWeek.monday,
-                eventLoader: _getEventsForDay,
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                },
-                onPageChanged: (focusedDay) {
-                  setState(() => _focusedDay = focusedDay);
-                },
-                headerStyle: const HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                ),
-                calendarStyle: CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Colors.deepPurple.withOpacity(0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Colors.deepPurple,
-                    shape: BoxShape.circle,
-                  ),
-                  markerDecoration: BoxDecoration(shape: BoxShape.circle),
-                ),
-                calendarBuilders: CalendarBuilders(
-                  markerBuilder: (context, date, events) {
-                    final color = _getMarkerColor(date);
-                    return events.isNotEmpty
-                        ? Container(
-                          width: 6,
-                          height: 6,
-                          margin: const EdgeInsets.only(top: 2),
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                          ),
-                        )
-                        : const SizedBox.shrink();
-                  },
-                ),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap:
-                () =>
-                    _calendarHeight.value =
-                        _calendarHeight.value == 0
-                            ? (_calendarFormat == CalendarFormat.month
-                                ? _maxCalendarHeight
-                                : _minCalendarHeight)
-                            : 0,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.schedule, color: Colors.grey),
-                  const SizedBox(width: 12),
-                  Text(
-                    DateFormat.yMMMMd('uk_UA').format(_selectedDay),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                alignment: Alignment.topCenter,
+                child: Container(
+                  key: _calendarSizeKey,
+                  child: TableCalendar(
+                    key: _calendarKey,
+                    calendarFormat: _calendarFormat,
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    startingDayOfWeek: StartingDayOfWeek.monday,
+                    eventLoader: _getEventsForDay,
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    onPageChanged: (focusedDay) {
+                      setState(() => _focusedDay = focusedDay);
+                    },
+                    headerStyle: const HeaderStyle(
+                      formatButtonVisible: false,
+                      titleCentered: true,
+                    ),
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: Colors.deepPurple.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      selectedDecoration: BoxDecoration(
+                        color: Colors.deepPurple,
+                        shape: BoxShape.circle,
+                      ),
+                      markerDecoration: BoxDecoration(shape: BoxShape.circle),
+                    ),
+                    calendarBuilders: CalendarBuilders(
+                      markerBuilder: (context, date, events) {
+                        final color = _getMarkerColor(date);
+                        return events.isNotEmpty
+                            ? Container(
+                              width: 6,
+                              height: 6,
+                              margin: const EdgeInsets.only(top: 2),
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
+                            )
+                            : const SizedBox.shrink();
+                      },
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  ValueListenableBuilder<double>(
-                    valueListenable: _calendarHeight,
-                    builder:
-                        (context, height, _) => Icon(
-                          height == 0
-                              ? Icons.keyboard_arrow_down
-                              : Icons.keyboard_arrow_up,
+                ),
+              ),
+              GestureDetector(
+                onTap:
+                    () =>
+                        _calendarHeight.value =
+                            _calendarHeight.value == 0
+                                ? (_calendarFormat == CalendarFormat.month
+                                    ? _maxCalendarHeight
+                                    : _minCalendarHeight)
+                                : 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.schedule, color: Colors.grey),
+                      const SizedBox(width: 12),
+                      Text(
+                        DateFormat.yMMMMd('uk_UA').format(_selectedDay),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                           color: Colors.deepPurple,
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      ValueListenableBuilder<double>(
+                        valueListenable: _calendarHeight,
+                        builder:
+                            (context, height, _) => Icon(
+                              height == 0
+                                  ? Icons.keyboard_arrow_down
+                                  : Icons.keyboard_arrow_up,
+                              color: Colors.deepPurple,
+                            ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: NotificationListener<UserScrollNotification>(
-              onNotification: (notification) {
-                // if (notification is UserScrollNotification) {
-                //   if (notification.direction == ScrollDirection.reverse) {
-                //     _calendarHeight.value = 0;
-                //   } else if (notification.direction ==
-                //           ScrollDirection.forward &&
-                //       _scrollController.position.pixels <=
-                //           _scrollController.position.minScrollExtent + 0.5) {
-                //     _calendarHeight.value =
-                //         _calendarFormat == CalendarFormat.month
-                //             ? _maxCalendarHeight
-                //             : _minCalendarHeight;
-                //   }
-                // }
-                return false;
-              },
-              child: StreamBuilder<QuerySnapshot>(
-                stream:
-                    FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user.uid)
-                        .collection('activity')
-                        .where(
-                          'scheduledAt',
-                          isGreaterThanOrEqualTo: Timestamp.fromDate(
-                            DateTime(
-                              _selectedDay.year,
-                              _selectedDay.month,
-                              _selectedDay.day,
-                            ),
-                          ),
-                        )
-                        .where(
-                          'scheduledAt',
-                          isLessThanOrEqualTo: Timestamp.fromDate(
-                            DateTime(
-                              _selectedDay.year,
-                              _selectedDay.month,
-                              _selectedDay.day,
-                              23,
-                              59,
-                              59,
-                            ),
-                          ),
-                        )
-                        .snapshots(),
-                builder: (context, snapshot) {
-                  final clients = snapshot.data?.docs ?? [];
+              Expanded(
+                child: NotificationListener<UserScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.direction == ScrollDirection.reverse) {
+                      _fabVisible.value =
+                          false; // ховаємо кнопку при скролі вниз
+                    } else if (notification.direction ==
+                        ScrollDirection.forward) {
+                      _fabVisible.value =
+                          true; // показуємо кнопку при скролі вгору
+                    }
+                    return false; // дозволяємо подальшу обробку скролу
+                  },
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream:
+                        FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(user.uid)
+                            .collection('activity')
+                            .where(
+                              'scheduledAt',
+                              isGreaterThanOrEqualTo: Timestamp.fromDate(
+                                DateTime(
+                                  _selectedDay.year,
+                                  _selectedDay.month,
+                                  _selectedDay.day,
+                                ),
+                              ),
+                            )
+                            .where(
+                              'scheduledAt',
+                              isLessThanOrEqualTo: Timestamp.fromDate(
+                                DateTime(
+                                  _selectedDay.year,
+                                  _selectedDay.month,
+                                  _selectedDay.day,
+                                  23,
+                                  59,
+                                  59,
+                                ),
+                              ),
+                            )
+                            .snapshots(),
+                    builder: (context, snapshot) {
+                      final clients = snapshot.data?.docs ?? [];
 
-                  return ListView.builder(
-                    controller: _scrollController,
-                    itemCount: clients.isEmpty ? 1 : clients.length,
-                    itemBuilder: (context, index) {
-                      if (clients.isEmpty) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32),
-                            child: Text('Немає записів на цю дату.'),
-                          ),
-                        );
-                      }
+                      return ListView.builder(
+                        controller: _scrollController,
+                        itemCount: clients.isEmpty ? 1 : clients.length,
+                        itemBuilder: (context, index) {
+                          if (clients.isEmpty) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(32),
+                                child: Text('Немає записів на цю дату.'),
+                              ),
+                            );
+                          }
 
-                      final client = clients[index];
-                      final clientName = client['name'] ?? '—';
-                      final comment = client['comment'] ?? '';
-                      final startTimestamp =
-                          client['scheduledAt'] as Timestamp?;
-                      final endTimestamp = client['scheduledEnd'] as Timestamp?;
+                          final client = clients[index];
+                          final clientName = client['name'] ?? '—';
+                          final comment = client['comment'] ?? '';
+                          final startTimestamp =
+                              client['scheduledAt'] as Timestamp?;
+                          final endTimestamp =
+                              client['scheduledEnd'] as Timestamp?;
 
-                      final startDate = startTimestamp?.toDate();
-                      final endDate = endTimestamp?.toDate();
+                          final startDate = startTimestamp?.toDate();
+                          final endDate = endTimestamp?.toDate();
 
-                      String formatTime(DateTime? dateTime) {
-                        if (dateTime == null) return '--:--';
-                        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-                      }
+                          String formatTime(DateTime? dateTime) {
+                            if (dateTime == null) return '--:--';
+                            return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+                          }
 
-                      // final timeRange =
-                      //     '${formatTime(startDate)} – ${formatTime(endDate)}';
+                          // final timeRange =
+                          //     '${formatTime(startDate)} – ${formatTime(endDate)}';
 
-                      return GestureDetector(
-                        onLongPress: () async {
-                          final selectedAction = await showCustomActionDialog(
-                            context,
-                            clientName: capitalizeWords(clientName),
-                            startTime: formatTime(startDate),
-                            endTime: formatTime(endDate),
-                          );
+                          return GestureDetector(
+                            onLongPress: () async {
+                              final selectedAction =
+                                  await showCustomActionDialog(
+                                    context,
+                                    clientName: capitalizeWords(clientName),
+                                    startTime: formatTime(startDate),
+                                    endTime: formatTime(endDate),
+                                  );
 
-                          if (selectedAction == 'delete') {
-                            // Залишаємо вашу логіку видалення
-                            final confirm =
-                                await showCustomDeleteConfirmationDialog(
-                                  context,
-                                  title: 'Видалити запис?',
-                                  message:
-                                      'Ви точно хочете видалити цей запис?',
+                              if (selectedAction == 'delete') {
+                                // Залишаємо вашу логіку видалення
+                                final confirm =
+                                    await showCustomDeleteConfirmationDialog(
+                                      context,
+                                      title: 'Видалити запис?',
+                                      message:
+                                          'Ви точно хочете видалити цей запис?',
+                                    );
+
+                                if (confirm == true) {
+                                  await _deleteAppointmentFromClient(client);
+                                }
+                              } else if (selectedAction == 'edit') {
+                                // Підготувати параметри для модалки:
+                                final selectedDate = DateTime(
+                                  startDate!.year,
+                                  startDate.month,
+                                  startDate.day,
                                 );
 
-                            if (confirm == true) {
-                              await _deleteAppointmentFromClient(client);
-                            }
-                          } else if (selectedAction == 'edit') {
-                            // Підготувати параметри для модалки:
-                            final selectedDate = DateTime(
-                              startDate!.year,
-                              startDate.month,
-                              startDate.day,
-                            );
+                                final startDuration = Duration(
+                                  hours: startDate.hour,
+                                  minutes: startDate.minute,
+                                );
+                                final endDuration = Duration(
+                                  hours: endDate!.hour,
+                                  minutes: endDate.minute,
+                                );
 
-                            final startDuration = Duration(
-                              hours: startDate.hour,
-                              minutes: startDate.minute,
-                            );
-                            final endDuration = Duration(
-                              hours: endDate!.hour,
-                              minutes: endDate.minute,
-                            );
+                                final result = await showAddClientCore(
+                                  context: context,
+                                  selectedDate: selectedDate,
+                                  fixedClientName: clientName,
+                                  initialComment: comment,
+                                  allowDateSelection: true,
+                                  autoSubmitToFirestore: false,
+                                  // Потрібно трохи модифікувати showAddClientCore,
+                                  // щоб додати початковий час startTime і endTime
+                                  // (якщо в тебе там немає такої логіки — додай два додаткові параметри Duration? initialStartTime, Duration? initialEndTime)
+                                  // і передавай їх у StatefulBuilder, щоб контролери та UI відобразили ці часи.
+                                  initialStartTime: startDuration,
+                                  initialEndTime: endDuration,
+                                );
 
-                            final result = await showAddClientCore(
-                              context: context,
-                              selectedDate: selectedDate,
-                              fixedClientName: clientName,
-                              initialComment: comment,
-                              allowDateSelection: true,
-                              autoSubmitToFirestore: false,
-                              // Потрібно трохи модифікувати showAddClientCore,
-                              // щоб додати початковий час startTime і endTime
-                              // (якщо в тебе там немає такої логіки — додай два додаткові параметри Duration? initialStartTime, Duration? initialEndTime)
-                              // і передавай їх у StatefulBuilder, щоб контролери та UI відобразили ці часи.
-                              initialStartTime: startDuration,
-                              initialEndTime: endDuration,
-                            );
+                                if (result != null) {
+                                  final user =
+                                      FirebaseAuth.instance.currentUser;
+                                  if (user == null) return;
 
-                            if (result != null) {
-                              final user = FirebaseAuth.instance.currentUser;
-                              if (user == null) return;
+                                  final appointmentRef = FirebaseFirestore
+                                      .instance
+                                      .collection('users')
+                                      .doc(user.uid)
+                                      .collection('activity')
+                                      .doc(client.id);
 
-                              final appointmentRef = FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(user.uid)
-                                  .collection('activity')
-                                  .doc(client.id);
+                                  final newStartDate = DateTime(
+                                    result['scheduledDate'].year,
+                                    result['scheduledDate'].month,
+                                    result['scheduledDate'].day,
+                                    result['startTime'].hour,
+                                    result['startTime'].minute,
+                                  );
 
-                              final newStartDate = DateTime(
-                                result['scheduledDate'].year,
-                                result['scheduledDate'].month,
-                                result['scheduledDate'].day,
-                                result['startTime'].hour,
-                                result['startTime'].minute,
-                              );
+                                  final newEndDate = DateTime(
+                                    result['scheduledDate'].year,
+                                    result['scheduledDate'].month,
+                                    result['scheduledDate'].day,
+                                    result['endTime'].hour,
+                                    result['endTime'].minute,
+                                  );
 
-                              final newEndDate = DateTime(
-                                result['scheduledDate'].year,
-                                result['scheduledDate'].month,
-                                result['scheduledDate'].day,
-                                result['endTime'].hour,
-                                result['endTime'].minute,
-                              );
+                                  // Отримаємо старі дані
+                                  final docSnapshot =
+                                      await appointmentRef.get();
+                                  final oldData = docSnapshot.data();
+                                  bool isDateChanged = false;
 
-                              // Отримаємо старі дані
-                              final docSnapshot = await appointmentRef.get();
-                              final oldData = docSnapshot.data();
-                              bool isDateChanged = false;
+                                  if (oldData != null) {
+                                    final oldStart =
+                                        oldData['scheduledAt'] is Timestamp
+                                            ? (oldData['scheduledAt']
+                                                    as Timestamp)
+                                                .toDate()
+                                            : DateTime.tryParse(
+                                                  oldData['scheduledAt'] ?? '',
+                                                ) ??
+                                                DateTime(0);
 
-                              if (oldData != null) {
-                                final oldStart =
-                                    oldData['scheduledAt'] is Timestamp
-                                        ? (oldData['scheduledAt'] as Timestamp)
-                                            .toDate()
-                                        : DateTime.tryParse(
-                                              oldData['scheduledAt'] ?? '',
-                                            ) ??
-                                            DateTime(0);
+                                    final oldEnd =
+                                        oldData['scheduledEnd'] is Timestamp
+                                            ? (oldData['scheduledEnd']
+                                                    as Timestamp)
+                                                .toDate()
+                                            : DateTime.tryParse(
+                                                  oldData['scheduledEnd'] ?? '',
+                                                ) ??
+                                                DateTime(0);
 
-                                final oldEnd =
-                                    oldData['scheduledEnd'] is Timestamp
-                                        ? (oldData['scheduledEnd'] as Timestamp)
-                                            .toDate()
-                                        : DateTime.tryParse(
-                                              oldData['scheduledEnd'] ?? '',
-                                            ) ??
-                                            DateTime(0);
+                                    if (oldStart != newStartDate ||
+                                        oldEnd != newEndDate) {
+                                      isDateChanged = true;
+                                    }
+                                  }
 
-                                if (oldStart != newStartDate ||
-                                    oldEnd != newEndDate) {
-                                  isDateChanged = true;
+                                  // Формуємо дані для оновлення
+                                  final updateData = {
+                                    'name': result['clientName'].toLowerCase(),
+                                    'comment': result['comment'],
+                                    'scheduledAt': newStartDate,
+                                    'scheduledEnd': newEndDate,
+                                  };
+
+                                  if (isDateChanged) {
+                                    updateData['isRescheduled'] = true;
+                                    updateData['date'] =
+                                        DateTime.now(); // оновлюємо дату активності, щоб показати наверху
+                                  }
+
+                                  await appointmentRef.update(updateData);
+
+                                  await _fetchEvents();
                                 }
                               }
+                            },
 
-                              // Формуємо дані для оновлення
-                              final updateData = {
-                                'name': result['clientName'],
-                                'comment': result['comment'],
-                                'scheduledAt': newStartDate,
-                                'scheduledEnd': newEndDate,
-                              };
-
-                              if (isDateChanged) {
-                                updateData['isRescheduled'] = true;
-                                updateData['date'] =
-                                    DateTime.now(); // оновлюємо дату активності, щоб показати наверху
-                              }
-
-                              await appointmentRef.update(updateData);
-
-                              await _fetchEvents();
-                            }
-                          }
-                        },
-
-                        child: Card(
-                          color: Colors.deepPurple.shade50,
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 1,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            leading: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  formatTime(startDate),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                            child: Card(
+                              color: Colors.deepPurple.shade50,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 1,
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
-                                const Text(
-                                  '–',
+                                leading: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      formatTime(startDate),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const Text(
+                                      '–',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color.fromARGB(
+                                          255,
+                                          110,
+                                          110,
+                                          110,
+                                        ),
+                                        height: 0.8,
+                                      ),
+                                    ),
+                                    Text(
+                                      formatTime(endDate),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                title: Text(
+                                  capitalizeWords(clientName),
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                subtitle: Text(
+                                  comment,
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color.fromARGB(255, 110, 110, 110),
-                                    height: 0.8,
-                                  ),
-                                ),
-                                Text(
-                                  formatTime(endDate),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
                                     fontSize: 14,
+                                    color: Colors.grey.shade600,
                                   ),
                                 ),
-                              ],
-                            ),
-                            title: Text(
-                              capitalizeWords(clientName),
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            subtitle: Text(
-                              comment,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => ClientDetailsScreen(
+                                            clientName: clientName,
+                                          ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => ClientDetailsScreen(
-                                        clientName: clientName,
-                                      ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
           const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton(
-              onPressed: () async {
-                final wasAdded = await showAddClientModalForCalendar(
-                  context,
-                  _selectedDay,
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _fabVisible,
+              builder: (context, visible, _) {
+                return AnimatedSlide(
+                  offset: visible ? Offset.zero : const Offset(0, 2),
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  child: AnimatedOpacity(
+                    opacity: visible ? 1 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: IOSFloatingActionButton(
+                      text: 'Записати клієнта',
+                      onPressed: () async {
+                        final wasAdded = await showAddClientModalForCalendar(
+                          context,
+                          _selectedDay,
+                        );
+                        if (wasAdded) {
+                          await _fetchEvents();
+                          setState(() {});
+                        }
+                      },
+                    ),
+                  ),
                 );
-                if (wasAdded) {
-                  await _fetchEvents();
-                  setState(() {
-                    _selectedDay = _selectedDay.add(const Duration(seconds: 0));
-                  });
-                }
               },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.deepPurple,
-              ),
-              child: const Text(
-                'Записати клієнта',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
             ),
           ),
         ],

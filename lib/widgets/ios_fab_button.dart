@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 
 class IOSFloatingActionButton extends StatelessWidget {
   final VoidCallback onPressed;
+  final String text;
 
-  const IOSFloatingActionButton({super.key, required this.onPressed});
+  const IOSFloatingActionButton({
+    super.key,
+    required this.onPressed,
+    this.text = 'Записати',  // Значення за замовчуванням
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +35,10 @@ class IOSFloatingActionButton extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  'Створити допис',  // змінив текст під тебе
-                  style: TextStyle(
+                  text,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
