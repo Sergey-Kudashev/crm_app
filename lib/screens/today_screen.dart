@@ -50,7 +50,7 @@ class _TodayScreenState extends State<TodayScreen> {
     ); // просто тригеримо оновлення, StreamBuilder сам підхопить зміни
   }
 
-    Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
+  Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -353,7 +353,8 @@ class _TodayScreenState extends State<TodayScreen> {
                                             String formatTime(
                                               DateTime? dateTime,
                                             ) {
-                                              if (dateTime == null) return '--:--';
+                                              if (dateTime == null)
+                                                return '--:--';
                                               return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
                                             }
 
@@ -393,8 +394,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                         scheduledEnd,
                                                       ),
                                                     );
-                                                    isPressedNotifier.value = false;
-
+                                                isPressedNotifier.value = false;
 
                                                 if (selectedAction ==
                                                     'delete') {
@@ -408,7 +408,9 @@ class _TodayScreenState extends State<TodayScreen> {
                                                       );
 
                                                   if (confirm == true) {
-                                                    await _deleteAppointmentFromClient(doc);
+                                                    await _deleteAppointmentFromClient(
+                                                      doc,
+                                                    );
                                                   }
                                                 } else if (selectedAction ==
                                                     'edit') {
@@ -445,6 +447,8 @@ class _TodayScreenState extends State<TodayScreen> {
                                                             startDuration,
                                                         initialEndTime:
                                                             endDuration,
+                                                        editingIntervalId:
+                                                            docId,
                                                       );
 
                                                   if (result != null) {
@@ -528,7 +532,9 @@ class _TodayScreenState extends State<TodayScreen> {
                                                     }
 
                                                     final updateData = {
-                                                      'name': result['clientName'].toLowerCase(),
+                                                      'name':
+                                                          result['clientName']
+                                                              .toLowerCase(),
                                                       'comment':
                                                           result['comment'],
                                                       'scheduledAt':
@@ -600,13 +606,42 @@ class _TodayScreenState extends State<TodayScreen> {
                                                         CrossAxisAlignment
                                                             .start,
                                                     children: [
-                                                      Text(
-                                                        capitalizeWords(name),
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: textColor,
-                                                        ),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          Expanded(
+                                                            child: Text(
+                                                              capitalizeWords(
+                                                                name,
+                                                              ),
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color:
+                                                                    textColor,
+                                                              ),
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 8,
+                                                          ),
+                                                          Text(
+                                                            '${formatTime(scheduledAt)} - ${formatTime(scheduledEnd)}',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                              color: textColor,
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                       Text(
                                                         comment,

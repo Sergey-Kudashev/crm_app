@@ -5,6 +5,7 @@ import 'package:crm_app/screens/clients_list_screen.dart';
 import 'package:crm_app/screens/calendar_screen.dart';
 import 'package:crm_app/screens/add_client_screen.dart';
 import 'package:crm_app/screens/today_screen.dart';
+import 'package:crm_app/screens/settings_screen.dart';
 
 class AppRoutes {
   static const String login = '/';
@@ -13,6 +14,7 @@ class AppRoutes {
   static const String calendar = '/calendar';
   static const String addClient = '/add-client';
   static const String todayScreen = '/today-screen';
+  static const String settings = '/settings';
 
   static Map<String, WidgetBuilder> routes = {
     home: (context) => const HomeScreen(),
@@ -20,5 +22,6 @@ class AppRoutes {
     calendar: (context) => const CalendarScreen(),
     addClient: (context) => const AddClientScreen(),
     todayScreen: (context) => const TodayScreen(),
+    settings: (_) => const SettingsScreen(),
   };
 }

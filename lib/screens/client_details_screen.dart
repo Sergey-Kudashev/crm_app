@@ -14,6 +14,8 @@ import 'package:crm_app/widgets/ios_fab_button.dart';
 import 'package:flutter/rendering.dart';
 import 'package:crm_app/widgets/сustom_action_dialog.dart';
 import 'package:crm_app/widgets/add_client_modals.dart';
+import 'package:crm_app/widgets/edit_comment_modal.dart';
+
 
 class ClientDetailsScreen extends StatefulWidget {
   final String clientName;
@@ -312,44 +314,17 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
 
     if (scheduledAt == null) {
       // Просте редагування коментаря
-      final TextEditingController commentEditController = TextEditingController(
-        text: comment,
-      );
+final result = await showEditCommentModal(context, comment);
 
-      final result = await showDialog<String>(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Редагувати коментар'),
-              content: TextField(
-                controller: commentEditController,
-                maxLines: 4,
-                decoration: const InputDecoration(hintText: 'Введіть коментар'),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(null),
-                  child: const Text('Відміна'),
-                ),
-                TextButton(
-                  onPressed:
-                      () => Navigator.of(
-                        context,
-                      ).pop(commentEditController.text.trim()),
-                  child: const Text('Зберегти'),
-                ),
-              ],
-            ),
-      );
+if (result != null && result.isNotEmpty && result != comment) {
+  await appointmentRef.update({
+    'comment': result,
+    'date': DateTime.now(), // оновлюємо дату редагування
+    'type': 'edit',
+  });
+  await _loadInitialDocuments();
+}
 
-      if (result != null && result.isNotEmpty && result != comment) {
-        await appointmentRef.update({
-          'comment': result,
-          'date': DateTime.now(), // оновлюємо дату редагування
-          'type': 'edit',
-        });
-        await _loadInitialDocuments();
-      }
     } else {
       // Повноцінне редагування (з апоінтментом)
       if (scheduledEnd == null) return;
@@ -694,6 +669,7 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
       ],
     );
   }
+
 
   Future<void> _handleActivityLongPress(
     DocumentSnapshot doc,

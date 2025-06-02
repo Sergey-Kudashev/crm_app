@@ -30,7 +30,8 @@ class AppDrawer extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             splashColor: Colors.deepPurple.withOpacity(0.3),
             highlightColor: Colors.deepPurple.withOpacity(0.1),
-            onTap: onTap ??
+            onTap:
+                onTap ??
                 () {
                   Navigator.pop(context);
                   if (currentRoute != routeName) {
@@ -78,18 +79,25 @@ class AppDrawer extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.purple,
-                    child: Text(
-                      initials,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, AppRoutes.settings);
+                    },
+                    child: CircleAvatar(
+                      radius: 28,
+                      backgroundColor: Colors.purple,
+                      child: Text(
+                        initials,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
+
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -125,12 +133,9 @@ class AppDrawer extends StatelessWidget {
               routeName: AppRoutes.todayScreen,
             ),
             const Spacer(),
-                        Padding(
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Divider(
-                color: Colors.grey.shade300,
-                thickness: 1,
-              ),
+              child: Divider(color: Colors.grey.shade300, thickness: 1),
             ), // Тепер кнопка «Вийти» внизу
             buildDrawerItem(
               title: 'Вийти',

@@ -444,6 +444,7 @@ class _CalendarScreenState extends State<CalendarScreen>
                                   // і передавай їх у StatefulBuilder, щоб контролери та UI відобразили ці часи.
                                   initialStartTime: startDuration,
                                   initialEndTime: endDuration,
+                                  editingIntervalId: client.id,
                                 );
 
                                 if (result != null) {

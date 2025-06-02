@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:flutter/animation.dart' as flutter_anim;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'autocomplete_text_field.dart';
-import '/widgets/time_range_picker_modal.dart';
+import 'package:crm_app/widgets/time_range_picker_modal.dart' as my_widgets;
 import '/widgets/date_picker_modal.dart';
 import 'package:crm_app/widgets/string_utils.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ Future<Map<String, dynamic>?> showAddClientModalForScreen(
   DateTime selectedDate, {
   String? fixedClientName,
   String? initialComment,
+  String? editingIntervalId, // Додаємо!
 }) async {
   return await showAddClientCore(
     context: context,
@@ -22,6 +24,7 @@ Future<Map<String, dynamic>?> showAddClientModalForScreen(
     initialComment: initialComment,
     allowDateSelection: true,
     autoSubmitToFirestore: false,
+    editingIntervalId: editingIntervalId, // Прокидаємо!
   );
 }
 
@@ -38,6 +41,36 @@ Future<bool> showAddClientModalForCalendar(
   return result?['success'] == true;
 }
 
+Future<List<my_widgets.Interval>> fetchBusyIntervals(
+  String userId,
+  DateTime date,
+) async {
+  final snapshot =
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('activity')
+          .where(
+            'scheduledAt',
+            isGreaterThanOrEqualTo: DateTime(date.year, date.month, date.day),
+          )
+          .where(
+            'scheduledAt',
+            isLessThan: DateTime(date.year, date.month, date.day + 1),
+          )
+          .get();
+
+  return snapshot.docs.map((doc) {
+    final data = doc.data();
+    return my_widgets.Interval(
+      id: doc.id, // Додаємо ідентифікатор
+      clientName: data['name'] ?? '',
+      start: (data['scheduledAt'] as Timestamp).toDate(),
+      end: (data['scheduledEnd'] as Timestamp).toDate(),
+    );
+  }).toList();
+}
+
 Future<Map<String, dynamic>?> showAddClientCore({
   required BuildContext context,
   required DateTime selectedDate,
@@ -45,8 +78,9 @@ Future<Map<String, dynamic>?> showAddClientCore({
   String? initialComment,
   required bool allowDateSelection,
   required bool autoSubmitToFirestore,
-  Duration? initialStartTime, // <-- додано
-  Duration? initialEndTime, // <-- додано
+  Duration? initialStartTime,
+  Duration? initialEndTime,
+  String? editingIntervalId, // Додаємо!
 }) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return null;
@@ -229,6 +263,12 @@ Future<Map<String, dynamic>?> showAddClientCore({
                                     style: TextStyle(color: Colors.white),
                                   ),
                                   onPressed: () async {
+                                    final busyIntervals =
+                                        await fetchBusyIntervals(
+                                          user.uid,
+                                          recordDate,
+                                        );
+
                                     if (allowDateSelection) {
                                       final pickedDate =
                                           await showDatePickerModal(
@@ -247,18 +287,24 @@ Future<Map<String, dynamic>?> showAddClientCore({
                                           minutes: now.minute,
                                         );
 
-                                    final selectedStart =
-                                        await showModalBottomSheet<Duration>(
-                                          context: context,
-                                          isScrollControlled: true,
-                                          backgroundColor: Colors.transparent,
-                                          builder:
-                                              (_) => buildTimePickerModal(
-                                                context,
-                                                title: 'Обери годину початку',
-                                                initial: initialStart,
-                                              ),
-                                        );
+                                    final selectedStart = await showModalBottomSheet<
+                                      Duration
+                                    >(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder:
+                                          (
+                                            _,
+                                          ) => my_widgets.buildTimePickerModal(
+                                            context,
+                                            title: 'Обери годину початку',
+                                            initial: initialStart,
+                                            busyIntervals: busyIntervals,
+                                            editingIntervalId:
+                                                editingIntervalId, // <--- додати
+                                          ),
+                                    );
                                     if (selectedStart == null) return;
                                     setState(() => startTime = selectedStart);
 
@@ -269,20 +315,27 @@ Future<Map<String, dynamic>?> showAddClientCore({
                                             : selectedStart +
                                                 const Duration(hours: 1);
 
-                                    final selectedEnd =
-                                        await showModalBottomSheet<Duration>(
-                                          context: context,
-                                          isScrollControlled: true,
-                                          backgroundColor: Colors.transparent,
-                                          builder:
-                                              (_) => buildTimePickerModal(
-                                                context,
-                                                title:
-                                                    'Обери годину закінчення',
-                                                initial: initialEnd,
-                                                minTime: selectedStart,
-                                              ),
-                                        );
+                                    final selectedEnd = await showModalBottomSheet<
+                                      Duration
+                                    >(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder:
+                                          (
+                                            _,
+                                          ) => my_widgets.buildTimePickerModal(
+                                            context,
+                                            title: 'Обери годину закінчення',
+                                            initial: initialEnd,
+                                            minTime: selectedStart,
+                                            busyIntervals: busyIntervals,
+                                            currentStartTime: selectedStart,
+                                            isEndTime: true,
+                                            editingIntervalId:
+                                                editingIntervalId, // <--- додати
+                                          ),
+                                    );
                                     if (selectedEnd == null) return;
                                     setState(() => endTime = selectedEnd);
                                   },
