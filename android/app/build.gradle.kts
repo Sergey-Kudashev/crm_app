@@ -29,10 +29,22 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug") // Для початку
-            // Якщо будеш збирати прод — заміниш на релізний ключ
+            minifyEnabled false // или false, если пока не хочешь обфускацию
+            shrinkResources true // уменьшение размера ресурсов
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
+
+    signingConfigs {
+    release {
+        storeFile file('release.keystore')
+        storePassword RELEASE_STORE_PASSWORD
+        keyAlias 'key_alias'
+        keyPassword RELEASE_KEY_PASSWORD
+    }
+}
+
 }
 
 flutter {
