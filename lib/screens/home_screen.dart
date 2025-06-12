@@ -172,7 +172,7 @@ return SafeArea(
               ),
         ),
         title: const Text(
-          'Головnа',
+          'Головна',
           style: TextStyle(
             color: Colors.black,
             fontSize: 26,
