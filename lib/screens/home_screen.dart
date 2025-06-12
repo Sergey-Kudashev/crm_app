@@ -33,7 +33,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    user = FirebaseAuth.instance.currentUser;
+    final current = FirebaseAuth.instance.currentUser;
+if (current == null) return;
+user = current;
     _scrollController = ScrollController()..addListener(_scrollListener);
     _loadInitialGroup();
   }
@@ -148,9 +150,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (user == null) {
-      return const Center(child: Text('Користувач не авторизований.'));
-    }
+if (user == null) {
+  return const Scaffold(
+    body: Center(child: CircularProgressIndicator()),
+  );
+}
+
 
     return Scaffold(
       backgroundColor: Colors.white,
