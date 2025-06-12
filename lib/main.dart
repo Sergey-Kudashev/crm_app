@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'app.dart';
 import 'firebase_options.dart';
 
@@ -15,13 +17,17 @@ void main() async {
   await initializeDateFormatting('uk_UA', null);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // ❌ Цей рядок можеш прибрати або оновити, якщо потрібна кастомна поведінка
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
   );
 
+  // 🔐 AppCheck: Web через reCAPTCHA, Android — debug
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.debug,
+    webProvider: kIsWeb
+        ? ReCaptchaV3Provider('6LeEa14rAAAAABwOEw0sDWHR3k-XTzOGkbJBFQjP')
+        : null,
+    // isTokenAutoRefreshEnabled: true,
   );
 
   runApp(const MyApp());
