@@ -157,7 +157,8 @@ if (user == null) {
 }
 
 
-    return Scaffold(
+return SafeArea(
+  child: Scaffold(
       backgroundColor: Colors.white,
       drawer: const AppDrawer(currentRoute: AppRoutes.home),
       appBar: AppBar(
@@ -272,6 +273,7 @@ if (user == null) {
           ),
         ],
       ),
+    ),
     );
   }
 
