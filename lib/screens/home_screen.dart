@@ -162,12 +162,12 @@ return SafeArea(
       backgroundColor: Colors.white,
       drawer: const AppDrawer(currentRoute: AppRoutes.home),
       appBar: AppBar(
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: Colors.deepPurple,
         elevation: 0,
         leading: Builder(
           builder:
               (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.black),
+                icon: const Icon(Icons.menu, color: Color.fromARGB(255, 255, 255, 255)),
                 onPressed: () => Scaffold.of(context).openDrawer(),
               ),
         ),
@@ -176,7 +176,7 @@ return SafeArea(
           style: TextStyle(
             color: Colors.black,
             fontSize: 26,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.normal,
           ),
         ),
         actions: [
