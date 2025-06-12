@@ -162,7 +162,7 @@ return SafeArea(
       backgroundColor: Colors.white,
       drawer: const AppDrawer(currentRoute: AppRoutes.home),
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: const Color.fromARGB(255, 103, 58, 183),
         elevation: 0,
         leading: Builder(
           builder:
@@ -183,7 +183,7 @@ return SafeArea(
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: CircleAvatar(
-              backgroundColor: Colors.grey,
+              backgroundColor: const Color.fromARGB(255, 167, 166, 166),
               child: Text(
                 (user!.email ?? '').substring(0, 1).toUpperCase(),
                 style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
