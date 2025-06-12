@@ -1,7 +1,8 @@
 {
     "name": "crm_app",
     "short_name": "crm_app",
-    "start_url": ".",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#4B0082",
     "theme_color": "#4B0082",
