@@ -174,7 +174,7 @@ return SafeArea(
         title: const Text(
           'Головна',
           style: TextStyle(
-            color: Colors.black,
+            color: Color.fromARGB(255, 255, 255, 255),
             fontSize: 26,
             fontWeight: FontWeight.normal,
           ),
@@ -186,7 +186,7 @@ return SafeArea(
               backgroundColor: Colors.grey,
               child: Text(
                 (user!.email ?? '').substring(0, 1).toUpperCase(),
-                style: const TextStyle(color: Colors.black),
+                style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
               ),
             ),
           ),
