@@ -17,7 +17,7 @@ void main() async {
 
   // 🎨 Налаштування кольору статус-бара
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
+    statusBarColor: Colors.pink,
     statusBarIconBrightness: Brightness.dark,
   ));
 
