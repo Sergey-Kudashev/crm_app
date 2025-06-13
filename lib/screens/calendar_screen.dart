@@ -175,14 +175,22 @@ class _CalendarScreenState extends State<CalendarScreen>
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Color(0xFF673AB7),
-        title: const Text('Календар'),
+        iconTheme: const IconThemeData(color: Colors.white),
+                title: const Text(
+          'Календар',
+          style: TextStyle(
+            color: Color.fromARGB(255, 255, 255, 255),
+            fontSize: 26,
+            fontWeight: FontWeight.w200,
+          ),
+        ),
         actions: [
           IconButton(
             icon: Icon(
               _calendarFormat == CalendarFormat.month
                   ? Icons.view_week
                   : Icons.view_module,
-              color: Colors.black,
+              color: const Color.fromARGB(255, 255, 255, 255),
             ),
             onPressed: () {
               final newFormat =

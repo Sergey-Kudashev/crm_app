@@ -37,6 +37,8 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Клієнти',
           style: TextStyle(
@@ -45,7 +47,6 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
             fontWeight: FontWeight.normal,
           ),
         ),
-        backgroundColor: Colors.grey.shade50,
       ),
       drawer: const AppDrawer(currentRoute: AppRoutes.clients),
       body: Column(
