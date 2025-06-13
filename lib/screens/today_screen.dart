@@ -143,7 +143,7 @@ class _TodayScreenState extends State<TodayScreen> {
       drawer: const AppDrawer(currentRoute: AppRoutes.todayScreen),
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: Colors.deepPurple,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
