@@ -169,17 +169,17 @@ class _TodayScreenState extends State<TodayScreen> {
                 }
               },
               child: Container(
-                padding: const EdgeInsets.only(left: 16, top: 6, bottom: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 74, 41, 131),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    bottomLeft: Radius.circular(20),
-                  ),
+                  color: const Color.fromARGB(255, 112, 62, 199),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 18),
+                    const Icon(Icons.calendar_today, size: 16),
                     const SizedBox(width: 6),
                     Text(
                       '${_selectedDate.day.toString().padLeft(2, '0')}.${_selectedDate.month.toString().padLeft(2, '0')}.${_selectedDate.year}',
