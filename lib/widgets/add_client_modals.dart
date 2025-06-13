@@ -96,8 +96,8 @@ Future<Map<String, dynamic>?> showAddClientCore({
       clientsSnapshot.docs.map((doc) => doc['name'] as String).toList();
 
   final nameController = TextEditingController(
-  text: fixedClientName?.toLowerCase(),
-);
+    text: fixedClientName?.toLowerCase(),
+  );
   final commentController = TextEditingController(text: initialComment);
   final phoneController = TextEditingController();
 
@@ -279,7 +279,11 @@ Future<Map<String, dynamic>?> showAddClientCore({
                                             recordDate,
                                           );
                                       if (pickedDate != null) {
-                                        setState(() => recordDate = pickedDate);
+                                        setState(() {
+                                          recordDate = pickedDate;
+                                          startTime = null;
+                                          endTime = null;
+                                        });
                                       }
                                     }
 
