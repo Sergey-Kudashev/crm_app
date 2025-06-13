@@ -174,7 +174,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 112, 62, 199),
+                  color: const Color.fromARGB(255, 122, 67, 216),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(

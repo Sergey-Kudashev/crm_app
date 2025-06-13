@@ -12,7 +12,6 @@ import 'package:flutter/rendering.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:crm_app/widgets/string_utils.dart';
-import 'package:crm_app/widgets/statusbar_util.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    StatusBarUtil.forceColor(const Color(0xFF673AB7));
     final current = FirebaseAuth.instance.currentUser;
 if (current == null) return;
 user = current;
@@ -161,10 +159,6 @@ if (user == null) {
 
 return SafeArea(
   child: Scaffold(
-    onDrawerChanged: (isOpened) {
-  StatusBarUtil.setForDrawer(isOpened: isOpened);
-},
-
       backgroundColor: Colors.white,
       drawer: const AppDrawer(currentRoute: AppRoutes.home),
       appBar: AppBar(

@@ -1,40 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:crm_app/routes/app_routes.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-class AppDrawer extends StatefulWidget {
+class AppDrawer extends StatelessWidget {
   final String currentRoute;
 
   const AppDrawer({super.key, required this.currentRoute});
-
-  @override
-  State<AppDrawer> createState() => _AppDrawerState();
-}
-
-class _AppDrawerState extends State<AppDrawer> {
-  @override
-  void initState() {
-    super.initState();
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
-        statusBarIconBrightness: Brightness.dark,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFF673AB7),
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,34 +19,29 @@ class _AppDrawerState extends State<AppDrawer> {
       required String routeName,
       VoidCallback? onTap,
     }) {
-      final isSelected = widget.currentRoute == routeName;
+      final isSelected = currentRoute == routeName;
 
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4),
         child: Material(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(12),
-            bottomLeft: Radius.circular(12),
-          ),
+          borderRadius: BorderRadius.circular(12),
           color: isSelected ? Colors.deepPurple : Colors.transparent,
           child: InkWell(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(12),
-              bottomLeft: Radius.circular(12),
-            ),
+            borderRadius: BorderRadius.circular(12),
             splashColor: Colors.deepPurple.withOpacity(0.3),
             highlightColor: Colors.deepPurple.withOpacity(0.1),
-            onTap: onTap ?? () {
-              Navigator.pop(context);
-              if (widget.currentRoute != routeName) {
-                Navigator.pushReplacementNamed(context, routeName);
-              }
-            },
+            onTap:
+                onTap ??
+                () {
+                  Navigator.pop(context);
+                  if (currentRoute != routeName) {
+                    Navigator.pushReplacementNamed(context, routeName);
+                  }
+                },
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 6, 16, 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Row(
                 children: [
-                  const SizedBox(width: 16),
                   Icon(
                     icon,
                     color: isSelected ? Colors.white : Colors.black87,
@@ -130,6 +97,7 @@ class _AppDrawerState extends State<AppDrawer> {
                       ),
                     ),
                   ),
+
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -168,7 +136,7 @@ class _AppDrawerState extends State<AppDrawer> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Divider(color: Colors.grey.shade300, thickness: 1),
-            ),
+            ), // Тепер кнопка «Вийти» внизу
             buildDrawerItem(
               title: 'Вийти',
               icon: LucideIcons.logOut,
