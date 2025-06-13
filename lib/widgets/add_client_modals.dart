@@ -95,7 +95,9 @@ Future<Map<String, dynamic>?> showAddClientCore({
   final List<String> existingClients =
       clientsSnapshot.docs.map((doc) => doc['name'] as String).toList();
 
-  final nameController = TextEditingController(text: fixedClientName);
+  final nameController = TextEditingController(
+  text: fixedClientName?.toLowerCase(),
+);
   final commentController = TextEditingController(text: initialComment);
   final phoneController = TextEditingController();
 
@@ -149,6 +151,7 @@ Future<Map<String, dynamic>?> showAddClientCore({
                               enabled: true,
                               onSelected: (value) {
                                 setState(() {
+                                  nameController.text = value.toLowerCase();
                                   isNewClient =
                                       !existingClients.any(
                                         (name) =>
@@ -412,7 +415,7 @@ Future<Map<String, dynamic>?> showAddClientCore({
                                     hour: endTime!.inHours,
                                     minute: endTime!.inMinutes % 60,
                                   ),
-                                  'clientName': rawClientName.toLowerCase(),
+                                  'clientName': clientName,
                                   'phone': phone,
                                   'comment': comment,
                                   'isNewClient': isNewClient,
