@@ -174,7 +174,7 @@ class _CalendarScreenState extends State<CalendarScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: Color(0xFF673AB7),
         title: const Text('Календар'),
         actions: [
           IconButton(

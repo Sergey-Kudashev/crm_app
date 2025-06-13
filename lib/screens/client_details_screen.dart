@@ -737,8 +737,15 @@ if (result != null && result.isNotEmpty && result != comment) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Дописи про клієнта'),
-        backgroundColor: Colors.grey.shade50,
+        title: const Text(
+          'Дописи клієнта',
+          style: TextStyle(
+            color: Color.fromARGB(255, 255, 255, 255),
+            fontSize: 26,
+            fontWeight: FontWeight.normal,
+          ),
+        ),
+        backgroundColor: Colors.deepPurple,
       ),
       body: Stack(
         children: [

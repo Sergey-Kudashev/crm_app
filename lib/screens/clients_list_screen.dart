@@ -37,7 +37,14 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
-        title: const Text('Клієнти'),
+        title: const Text(
+          'Клієнти',
+          style: TextStyle(
+            color: Color.fromARGB(255, 255, 255, 255),
+            fontSize: 26,
+            fontWeight: FontWeight.normal,
+          ),
+        ),
         backgroundColor: Colors.grey.shade50,
       ),
       drawer: const AppDrawer(currentRoute: AppRoutes.clients),
@@ -75,7 +82,7 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
                   final searchLower = _searchText.toLowerCase();
                   query = query
                       .where('name', isGreaterThanOrEqualTo: searchLower)
-                      .where('name', isLessThan: _searchText + '\uf8ff');
+                      .where('name', isLessThan: '$_searchText\uf8ff');
                 }
                 return query.snapshots();
               }(),

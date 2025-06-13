@@ -147,7 +147,14 @@ class _TodayScreenState extends State<TodayScreen> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Сьогодні'),
+          const Text(
+          'Сьогодні',
+          style: TextStyle(
+            color: Color.fromARGB(255, 255, 255, 255),
+            fontSize: 26,
+            fontWeight: FontWeight.normal,
+          ),
+        ),
             InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: () async {
