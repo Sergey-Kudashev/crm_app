@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'autocomplete_text_field.dart';
 import 'package:crm_app/widgets/time_range_picker_modal.dart' as my_widgets;
 import '/widgets/date_picker_modal.dart';
-import 'package:crm_app/widgets/string_utils.dart';
+// import 'package:crm_app/widgets/string_utils.dart';
 import 'package:intl/intl.dart';
 import 'package:crm_app/widgets/custom_snackbar.dart';
 
@@ -275,8 +275,9 @@ Future<Map<String, dynamic>?> showAddClientCore({
                                             context,
                                             recordDate,
                                           );
-                                      if (pickedDate != null)
+                                      if (pickedDate != null) {
                                         setState(() => recordDate = pickedDate);
+                                      }
                                     }
 
                                     final now = TimeOfDay.now();
@@ -411,7 +412,7 @@ Future<Map<String, dynamic>?> showAddClientCore({
                                     hour: endTime!.inHours,
                                     minute: endTime!.inMinutes % 60,
                                   ),
-                                  'clientName': capitalizeWords(rawClientName),
+                                  'clientName': rawClientName.toLowerCase(),
                                   'phone': phone,
                                   'comment': comment,
                                   'isNewClient': isNewClient,
