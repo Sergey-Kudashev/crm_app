@@ -180,8 +180,7 @@ class _CalendarScreenState extends State<CalendarScreen>
           'Календар',
           style: TextStyle(
             color: Color.fromARGB(255, 255, 255, 255),
-            fontSize: 26,
-            fontWeight: FontWeight.w200,
+            fontSize: 22,
           ),
         ),
         actions: [

@@ -175,8 +175,7 @@ return SafeArea(
           'Головна',
           style: TextStyle(
             color: Color.fromARGB(255, 255, 255, 255),
-            fontSize: 26,
-            fontWeight: FontWeight.normal,
+            fontSize: 22,
           ),
         ),
         actions: [

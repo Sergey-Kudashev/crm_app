@@ -152,8 +152,7 @@ class _TodayScreenState extends State<TodayScreen> {
           'Сьогодні',
           style: TextStyle(
             color: Color.fromARGB(255, 255, 255, 255),
-            fontSize: 26,
-            fontWeight: FontWeight.normal,
+            fontSize: 22,
           ),
         ),
             InkWell(
@@ -175,7 +174,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: const Color.fromARGB(255, 74, 41, 131),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -184,7 +183,10 @@ class _TodayScreenState extends State<TodayScreen> {
                     const SizedBox(width: 6),
                     Text(
                       '${_selectedDate.day.toString().padLeft(2, '0')}.${_selectedDate.month.toString().padLeft(2, '0')}.${_selectedDate.year}',
-                      style: const TextStyle(fontSize: 18),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.white
+                      ),
                     ),
                   ],
                 ),
