@@ -171,11 +171,14 @@ return SafeArea(
                 onPressed: () => Scaffold.of(context).openDrawer(),
               ),
         ),
-        title: const Text(
-          'Головна',
-          style: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
-            fontSize: 22,
+        title: const Padding(
+          padding: EdgeInsets.only(left: 16),
+          child: Text(
+            'Головна',
+            style: TextStyle(
+              color: Color.fromARGB(255, 255, 255, 255),
+              fontSize: 22,
+            ),
           ),
         ),
         actions: [
