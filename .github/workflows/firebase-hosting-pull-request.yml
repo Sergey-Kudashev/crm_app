@@ -17,7 +17,7 @@ jobs:
       - name: Set up Flutter
         uses: flutter-actions/setup-flutter@v2
         with:
-          flutter-version: '3.29.3' # або інша твоя версія
+          version: '3.29.3'
 
       - name: Install dependencies
         run: flutter pub get
@@ -30,9 +30,10 @@ jobs:
         with:
           path: |
             ~/.pub-cache
-            key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
-            restore-keys: |
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
             ${{ runner.os }}-flutter-
+
 
 
       - name: Deploy to Firebase Hosting

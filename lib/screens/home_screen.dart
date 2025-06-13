@@ -162,7 +162,7 @@ return SafeArea(
       backgroundColor: Colors.white,
       drawer: const AppDrawer(currentRoute: AppRoutes.home),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 103, 58, 183),
+        backgroundColor: const Color(0xFF673AB7),
         elevation: 0,
         leading: Builder(
           builder:
