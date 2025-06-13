@@ -161,40 +161,36 @@ return SafeArea(
   child: Scaffold(
       backgroundColor: Colors.white,
       drawer: const AppDrawer(currentRoute: AppRoutes.home),
-appBar: AppBar(
-  backgroundColor: const Color(0xFF673AB7),
-  elevation: 0,
-  titleSpacing: 0, // прибирає стандартний відступ між leading і title
-  leading: Builder(
-    builder: (context) => IconButton(
-      icon: const Icon(Icons.menu, color: Colors.white),
-      onPressed: () => Scaffold.of(context).openDrawer(),
-    ),
-  ),
-  title: const Padding(
-    padding: EdgeInsets.only(left: 12),
-    child: Text(
-      'Головна',
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 22,
-      ),
-    ),
-  ),
-  actions: [
-    Padding(
-      padding: const EdgeInsets.only(right: 16.0),
-      child: CircleAvatar(
-        backgroundColor: Color.fromARGB(255, 167, 166, 166),
-        child: Text(
-          (user!.email ?? '').substring(0, 1).toUpperCase(),
-          style: TextStyle(color: Colors.white),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF673AB7),
+        elevation: 0,
+        leading: Builder(
+          builder:
+              (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Color.fromARGB(255, 255, 255, 255)),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
         ),
+        title: const Text(
+          'Головна',
+          style: TextStyle(
+            color: Color.fromARGB(255, 255, 255, 255),
+            fontSize: 22,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: CircleAvatar(
+              backgroundColor: const Color.fromARGB(255, 167, 166, 166),
+              child: Text(
+                (user!.email ?? '').substring(0, 1).toUpperCase(),
+                style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+              ),
+            ),
+          ),
+        ],
       ),
-    ),
-  ],
-),
-
       body: Stack(
         children: [
           Padding(
