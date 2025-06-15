@@ -17,8 +17,8 @@ void main() async {
 
   // 🎨 Налаштування кольору статус-бара
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: Colors.white,
-    statusBarIconBrightness: Brightness.dark,
+    statusBarColor: Color(0xFF673AB7),
+    statusBarIconBrightness: Brightness.light,
   ));
 
   timeago.setLocaleMessages('uk', timeago.UkMessages());
