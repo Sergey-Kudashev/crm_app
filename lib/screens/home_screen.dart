@@ -156,45 +156,45 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-        backgroundColor: Colors.white,
-        drawer: const AppDrawer(currentRoute: AppRoutes.home),
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF673AB7),
-          elevation: 0,
-          leading: Builder(
-            builder:
-                (context) => IconButton(
-                  icon: const Icon(
-                    Icons.menu,
-                    color: Color.fromARGB(255, 255, 255, 255),
-                  ),
-                  onPressed: () => Scaffold.of(context).openDrawer(),
+      drawer: const AppDrawer(currentRoute: AppRoutes.home),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF673AB7),
+        elevation: 0,
+        leading: Builder(
+          builder:
+              (context) => IconButton(
+                icon: const Icon(
+                  Icons.menu,
+                  color: Color.fromARGB(255, 255, 255, 255),
                 ),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+        ),
+        title: const Text(
+          'Головна',
+          style: TextStyle(
+            color: Color.fromARGB(255, 255, 255, 255),
+            fontSize: 22,
           ),
-          title: const Text(
-            'Головна',
-            style: TextStyle(
-              color: Color.fromARGB(255, 255, 255, 255),
-              fontSize: 22,
-            ),
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: CircleAvatar(
-                backgroundColor: const Color.fromARGB(255, 167, 166, 166),
-                child: Text(
-                  (user!.email ?? '').substring(0, 1).toUpperCase(),
-                  style: const TextStyle(
-                    color: Color.fromARGB(255, 255, 255, 255),
-                  ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: CircleAvatar(
+              backgroundColor: const Color.fromARGB(255, 167, 166, 166),
+              child: Text(
+                (user!.email ?? '').substring(0, 1).toUpperCase(),
+                style: const TextStyle(
+                  color: Color.fromARGB(255, 255, 255, 255),
                 ),
               ),
             ),
-          ],
-        ),
-        body: SafeArea(
-          child: Stack(
+          ),
+        ],
+      ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Stack(
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
