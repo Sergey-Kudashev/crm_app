@@ -12,8 +12,6 @@ import 'package:flutter/rendering.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:crm_app/widgets/string_utils.dart';
-// import 'package:flutter/foundation.dart' show kIsWeb;
-// import 'dart:html' as html;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // if (kIsWeb) blockSwipeBack();
     final current = FirebaseAuth.instance.currentUser;
     if (current == null) return;
     user = current;
@@ -45,7 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    // if (kIsWeb) unblockSwipeBack();
     _scrollController.dispose();
     _fabVisible.dispose();
     super.dispose();
@@ -69,18 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _fabVisible.value = true;
     }
   }
-
-//   void blockSwipeBack() {
-//   html.window.history.pushState(null, '', html.window.location.href);
-//   html.window.onPopState.listen((event) {
-//     html.window.history.pushState(null, '', html.window.location.href);
-//   });
-// }
-
-// void unblockSwipeBack() {
-//   html.window.onPopState.listen(null); // просто нічого не слухаємо
-// }
-
 
   Future<void> _loadInitialGroup() async {
     if (user == null) return;
@@ -171,7 +155,12 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Scaffold(
+return PopScope(
+  canPop: false,
+  // onPopInvokedWithResult: (bool didPop, PopInvocationResult result) {
+  //   // Блокуємо будь-яку спробу повернення назад (жест/кнопка)
+  // },
+  child: Scaffold(
       drawer: const AppDrawer(currentRoute: AppRoutes.home),
       appBar: AppBar(
         backgroundColor: const Color(0xFF673AB7),
@@ -317,6 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
