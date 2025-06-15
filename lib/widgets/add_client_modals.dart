@@ -261,26 +261,26 @@ child: StatefulBuilder(
                                     style: TextStyle(color: Colors.white),
                                   ),
                                   onPressed: () async {
-                                    final busyIntervals =
-                                        await fetchBusyIntervals(
-                                          user.uid,
-                                          recordDate,
-                                        );
+if (allowDateSelection) {
+  final pickedDate = await showDatePickerModal(
+    context,
+    recordDate,
+  );
+  if (pickedDate != null) {
+    setState(() {
+      recordDate = pickedDate;
+      startTime = null;
+      endTime = null;
+    });
+  }
+}
 
-                                    if (allowDateSelection) {
-                                      final pickedDate =
-                                          await showDatePickerModal(
-                                            context,
-                                            recordDate,
-                                          );
-                                      if (pickedDate != null) {
-                                        setState(() {
-                                          recordDate = pickedDate;
-                                          startTime = null;
-                                          endTime = null;
-                                        });
-                                      }
-                                    }
+// 💡 Після вибору дати — отримуємо busyIntervals ще раз
+final busyIntervals = await fetchBusyIntervals(
+  user.uid,
+  recordDate,
+);
+
 
                                     final now = TimeOfDay.now();
                                     final initialStart =
