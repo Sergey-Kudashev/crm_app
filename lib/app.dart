@@ -11,20 +11,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'CRM App',
       debugShowCheckedModeBanner: false,
-      onGenerateInitialRoutes:
-          (_) => [
-            MaterialPageRoute(
-              builder: (_) => const AuthGate(),
-              settings: const RouteSettings(name: '/'),
-            ),
-          ],
-      onGenerateRoute: (settings) {
-        final routeBuilder = AppRoutes.routes[settings.name];
-        if (routeBuilder != null) {
-          return MaterialPageRoute(builder: routeBuilder, settings: settings);
-        }
-        return null;
-      },
+      home: const AuthGate(),
+      routes: AppRoutes.routes,
+      navigatorObservers: [HeroController()],
+      onGenerateRoute:
+          (settings) => MaterialPageRoute(
+            builder: (_) => const AuthGate(),
+            settings: settings,
+          ),
     );
   }
 }
