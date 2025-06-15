@@ -537,7 +537,7 @@ class _CalendarScreenState extends State<CalendarScreen>
                             },
 
                             child: Card(
-                              color: Colors.deepPurple.shade50,
+                              color: const Color.fromARGB(255, 216, 216, 216),
                               margin: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 8,
