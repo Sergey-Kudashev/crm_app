@@ -157,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       drawer: const AppDrawer(currentRoute: AppRoutes.home),
+      drawerEnableOpenDragGesture: false,
       appBar: AppBar(
         backgroundColor: const Color(0xFF673AB7),
         elevation: 0,
