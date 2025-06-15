@@ -101,9 +101,9 @@ Future<Map<String, dynamic>?> showAddClientCore({
   final commentController = TextEditingController(text: initialComment);
   final phoneController = TextEditingController();
 
-  final initialSize = fixedClientName == null ? 0.6 : 0.4;
-  final maxSize = fixedClientName == null ? 0.7 : 0.5;
-  final minSize = 0.3;
+  // final initialSize = fixedClientName == null ? 0.6 : 0.4;
+  // final maxSize = fixedClientName == null ? 0.7 : 0.5;
+  // final minSize = 0.3;
 
   Duration? startTime = initialStartTime;
   Duration? endTime = initialEndTime;
@@ -117,26 +117,21 @@ Future<Map<String, dynamic>?> showAddClientCore({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder:
-        (ctx) => DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: initialSize,
-          minChildSize: minSize,
-          maxChildSize: maxSize,
-          builder: (context, scrollController) {
-            return Material(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Padding(
-                padding: MediaQuery.of(
-                  context,
-                ).viewInsets.add(const EdgeInsets.all(16)),
-                child: StatefulBuilder(
+builder: (ctx) {
+  final mediaQuery = MediaQuery.of(ctx);
+  // final availableHeight = mediaQuery.size.height;
+
+  return FractionallySizedBox(
+    heightFactor: 0.95,
+    child: Material(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: mediaQuery.viewInsets.add(const EdgeInsets.all(16)),
+child: StatefulBuilder(
                   builder:
                       (context, setState) => ListView(
-                        controller: scrollController,
+                        shrinkWrap: true,
                         children: [
                           if (fixedClientName == null) ...[
                             const Text(
@@ -493,9 +488,10 @@ Future<Map<String, dynamic>?> showAddClientCore({
                         ],
                       ),
                 ),
-              ),
-            );
-          },
-        ),
+      ),
+    ),
+  );
+},
+
   );
 }
