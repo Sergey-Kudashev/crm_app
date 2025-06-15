@@ -51,9 +51,14 @@ class _FullImageViewState extends State<FullImageView> {
               pageController: _pageController,
               itemCount: widget.photoUrls.length,
               builder: (context, index) {
+                final url = widget.photoUrls[index];
+                final imageProvider = url.startsWith('http')
+                    ? NetworkImage(url)
+                    : FileImage(File(url)) as ImageProvider;
+
                 return PhotoViewGalleryPageOptions(
-                  imageProvider: FileImage(File(widget.photoUrls[index])),
-                  heroAttributes: PhotoViewHeroAttributes(tag: widget.photoUrls[index]),
+                  imageProvider: imageProvider,
+                  heroAttributes: PhotoViewHeroAttributes(tag: url),
                 );
               },
               onPageChanged: (index) {

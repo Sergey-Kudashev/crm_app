@@ -49,6 +49,7 @@ dependencies:
   flutter_typeahead: ^4.3.7
   http: ^0.13.5
   image_picker: ^1.0.7
+  cached_network_image: ^3.3.1
 
 
 

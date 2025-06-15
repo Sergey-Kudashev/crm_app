@@ -155,158 +155,161 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-return PopScope(
-  canPop: false,
-  // onPopInvokedWithResult: (bool didPop, PopInvocationResult result) {
-  //   // Блокуємо будь-яку спробу повернення назад (жест/кнопка)
-  // },
-  child: Scaffold(
-      drawer: const AppDrawer(currentRoute: AppRoutes.home),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF673AB7),
-        elevation: 0,
-        leading: Builder(
-          builder:
-              (context) => IconButton(
-                icon: const Icon(
-                  Icons.menu,
-                  color: Color.fromARGB(255, 255, 255, 255),
+    return PopScope(
+      canPop: false,
+      // onPopInvokedWithResult: (bool didPop, PopInvocationResult result) {
+      //   // Блокуємо будь-яку спробу повернення назад (жест/кнопка)
+      // },
+      child: Scaffold(
+        drawer: const AppDrawer(currentRoute: AppRoutes.home),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF673AB7),
+          elevation: 0,
+          leading: Builder(
+            builder:
+                (context) => IconButton(
+                  icon: const Icon(
+                    Icons.menu,
+                    color: Color.fromARGB(255, 255, 255, 255),
+                  ),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
                 ),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-        ),
-        title: const Text(
-          'Головна',
-          style: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
-            fontSize: 22,
           ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: const Color.fromARGB(255, 167, 166, 166),
-              child: Text(
-                (user!.email ?? '').substring(0, 1).toUpperCase(),
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 255, 255, 255),
-                ),
-              ),
+          title: const Text(
+            'Головна',
+            style: TextStyle(
+              color: Color.fromARGB(255, 255, 255, 255),
+              fontSize: 22,
             ),
           ),
-        ],
-      ),
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Stack(
-          children: [
+          actions: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (notification) {
-                  if (notification is UserScrollNotification) {
-                    final direction = notification.direction;
-                    if (direction == ScrollDirection.reverse) {
-                      _fabVisible.value = false;
-                    } else if (direction == ScrollDirection.forward) {
-                      _fabVisible.value = true;
-                    }
-                  }
-                  return false;
-                },
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.only(top: 12, bottom: 80),
-                  itemCount:
-                      groupedActivities.length +
-                      2, // +1 для todayGroup, +1 для loading
-                  itemBuilder: (context, index) {
-                    // Перший елемент — todayGroup
-                    if (index == 0) {
-                      return _buildTodayGroup();
-                    }
-
-                    // Останній елемент — індикатор завантаження
-                    if (index == groupedActivities.length + 1) {
-                      return isLoadingMore
-                          ? const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                          : const SizedBox.shrink();
-                    }
-
-                    // Основні елементи — групи активностей по датах
-                    final entry = groupedActivities.entries.elementAt(
-                      index - 1,
-                    );
-                    final dateStr = entry.key;
-                    final date = DateTime.tryParse(dateStr);
-                    final activities = entry.value;
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (date != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8, top: 16),
-                            child: Text(
-                              _formatDateLabel(date),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        ListView.builder(
-                          itemCount: activities.length,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, i) {
-                            return _buildActivityItem(activities[i]);
-                          },
-                        ),
-                        const Divider(thickness: 1),
-                      ],
-                    );
-                  },
+              padding: const EdgeInsets.only(right: 16.0),
+              child: CircleAvatar(
+                backgroundColor: const Color.fromARGB(255, 167, 166, 166),
+                child: Text(
+                  (user!.email ?? '').substring(0, 1).toUpperCase(),
+                  style: const TextStyle(
+                    color: Color.fromARGB(255, 255, 255, 255),
+                  ),
                 ),
-              ),
-            ),
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: ValueListenableBuilder<bool>(
-                valueListenable: _fabVisible,
-                builder: (context, visible, _) {
-                  return AnimatedSlide(
-                    offset: visible ? Offset.zero : const Offset(0, 2),
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    child: AnimatedOpacity(
-                      opacity: visible ? 1 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: IOSFloatingActionButton(
-                        text: 'Створити допис',
-                        onPressed: () async {
-                          await Navigator.pushNamed(
-                            context,
-                            AppRoutes.addClient,
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                },
               ),
             ),
           ],
         ),
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification is UserScrollNotification) {
+                      final direction = notification.direction;
+                      if (direction == ScrollDirection.reverse) {
+                        _fabVisible.value = false;
+                      } else if (direction == ScrollDirection.forward) {
+                        _fabVisible.value = true;
+                      }
+                    }
+                    return false;
+                  },
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.only(top: 12, bottom: 80),
+                    itemCount:
+                        groupedActivities.length +
+                        2, // +1 для todayGroup, +1 для loading
+                    itemBuilder: (context, index) {
+                      // Перший елемент — todayGroup
+                      if (index == 0) {
+                        return _buildTodayGroup();
+                      }
+
+                      // Останній елемент — індикатор завантаження
+                      if (index == groupedActivities.length + 1) {
+                        return isLoadingMore
+                            ? const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                            : const SizedBox.shrink();
+                      }
+
+                      // Основні елементи — групи активностей по датах
+                      final entry = groupedActivities.entries.elementAt(
+                        index - 1,
+                      );
+                      final dateStr = entry.key;
+                      final date = DateTime.tryParse(dateStr);
+                      final activities = entry.value;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (date != null)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 8,
+                                top: 16,
+                              ),
+                              child: Text(
+                                _formatDateLabel(date),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ListView.builder(
+                            itemCount: activities.length,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemBuilder: (context, i) {
+                              return _buildActivityItem(activities[i]);
+                            },
+                          ),
+                          const Divider(thickness: 1),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: _fabVisible,
+                  builder: (context, visible, _) {
+                    return AnimatedSlide(
+                      offset: visible ? Offset.zero : const Offset(0, 2),
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      child: AnimatedOpacity(
+                        opacity: visible ? 1 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: IOSFloatingActionButton(
+                          text: 'Створити допис',
+                          onPressed: () async {
+                            await Navigator.pushNamed(
+                              context,
+                              AppRoutes.addClient,
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-    ),
     );
   }
 
@@ -449,25 +452,13 @@ return PopScope(
                           spacing: 6,
                           children:
                               images.map((path) {
-                                final fixedPath = path.replaceFirst(
-                                  'file://',
-                                  '',
-                                );
                                 return GestureDetector(
                                   onTap:
                                       () => Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder:
                                               (_) => FullImageView(
-                                                photoUrls:
-                                                    images
-                                                        .map(
-                                                          (e) => e.replaceFirst(
-                                                            'file://',
-                                                            '',
-                                                          ),
-                                                        )
-                                                        .toList(),
+                                                photoUrls: images,
                                                 initialIndex: images.indexOf(
                                                   path,
                                                 ),
@@ -476,7 +467,7 @@ return PopScope(
                                       ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(6),
-                                    child: CachedFileImage(filePath: fixedPath),
+                                    child: CachedFileImage(filePath: path),
                                   ),
                                 );
                               }).toList(),

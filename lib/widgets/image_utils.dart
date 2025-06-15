@@ -8,28 +8,34 @@ const String uploadPreset = 'pwa_crm_upload';
 Future<String?> uploadImageToCloudinary({
   required Uint8List bytes,
   required String fileName,
+  required String folderPath, // <-- додано
 }) async {
+  const cloudName = 'dnaese467';
+  const uploadPreset = 'pwa_crm_upload';
+
   final uri = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
 
   final request = http.MultipartRequest('POST', uri)
     ..fields['upload_preset'] = uploadPreset
     ..fields['public_id'] = fileName
-    ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: '$fileName.jpg'));
+    ..fields['folder'] = folderPath // <-- використовуємо
+    ..files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: '$fileName.jpg',
+      ),
+    );
 
-  try {
-    final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
+  final response = await request.send();
 
-    if (streamedResponse.statusCode == 200) {
-      final res = await streamedResponse.stream.bytesToString();
-      final json = jsonDecode(res);
-      return json['secure_url'];
-    } else {
-      final error = await streamedResponse.stream.bytesToString();
-      print('Cloudinary error ${streamedResponse.statusCode}: $error');
-      return null;
-    }
-  } catch (e) {
-    print('Cloudinary exception: $e');
+  if (response.statusCode == 200) {
+    final res = await response.stream.bytesToString();
+    final json = jsonDecode(res);
+    return json['secure_url'];
+  } else {
+    print('Помилка Cloudinary: ${response.statusCode}');
     return null;
   }
 }
+
