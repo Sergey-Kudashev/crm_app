@@ -12,8 +12,8 @@ import 'package:flutter/rendering.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:crm_app/widgets/string_utils.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:html' as html;
+// import 'package:flutter/foundation.dart' show kIsWeb;
+// import 'dart:html' as html;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) blockSwipeBack();
+    // if (kIsWeb) blockSwipeBack();
     final current = FirebaseAuth.instance.currentUser;
     if (current == null) return;
     user = current;
@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    if (kIsWeb) unblockSwipeBack();
+    // if (kIsWeb) unblockSwipeBack();
     _scrollController.dispose();
     _fabVisible.dispose();
     super.dispose();
@@ -70,16 +70,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void blockSwipeBack() {
-  html.window.history.pushState(null, '', html.window.location.href);
-  html.window.onPopState.listen((event) {
-    html.window.history.pushState(null, '', html.window.location.href);
-  });
-}
+//   void blockSwipeBack() {
+//   html.window.history.pushState(null, '', html.window.location.href);
+//   html.window.onPopState.listen((event) {
+//     html.window.history.pushState(null, '', html.window.location.href);
+//   });
+// }
 
-void unblockSwipeBack() {
-  html.window.onPopState.listen(null); // просто нічого не слухаємо
-}
+// void unblockSwipeBack() {
+//   html.window.onPopState.listen(null); // просто нічого не слухаємо
+// }
 
 
   Future<void> _loadInitialGroup() async {

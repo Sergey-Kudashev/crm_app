@@ -47,10 +47,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         password: passwordController.text.trim(),
       );
       if (userCredential.user != null) {
-        Navigator.pushNamedAndRemoveUntil(
+        Navigator.pushReplacementNamed(
   context,
   AppRoutes.home,
-  (route) => false,
 );
 
       }

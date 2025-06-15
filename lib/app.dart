@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const AuthGate(),
       routes: AppRoutes.routes,
-      navigatorObservers: [HeroController()],
+      // navigatorObservers: [HeroController()],
       onGenerateRoute:
           (settings) => MaterialPageRoute(
             builder: (_) => const AuthGate(),
