@@ -493,20 +493,22 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                 iconColor = Colors.red;
               } else if (type == 'edit') {
                 icon = LucideIcons.pencil;
-                iconColor = Colors.orange;
+                iconColor = Colors.blueGrey;
               } else if (isDeletedRecord) {
                 icon = LucideIcons.trendingDown;
                 iconColor = Colors.redAccent;
               } else if (isRescheduled) {
                 icon = LucideIcons.repeat;
-                iconColor = Colors.blue;
+                iconColor = Colors.blueAccent;
               } else if (scheduledAt != null) {
                 icon = LucideIcons.trendingUp;
                 iconColor = Colors.green;
               } else if (images.isNotEmpty) {
                 icon = LucideIcons.image;
+                iconColor = Color(0xFF5DA1C5); 
               } else if (comment.isNotEmpty) {
                 icon = LucideIcons.messageCircle;
+                iconColor = Colors.grey;
               } else {
                 icon = LucideIcons.activity;
               }
