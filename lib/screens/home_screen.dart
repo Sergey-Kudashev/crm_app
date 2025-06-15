@@ -34,8 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     final current = FirebaseAuth.instance.currentUser;
-if (current == null) return;
-user = current;
+    if (current == null) return;
+    user = current;
     _scrollController = ScrollController()..addListener(_scrollListener);
     _loadInitialGroup();
   }
@@ -68,61 +68,62 @@ user = current;
 
   Future<void> _loadInitialGroup() async {
     if (user == null) return;
-final query = await FirebaseFirestore.instance
-    .collection('users')
-    .doc(user!.uid)
-    .collection('activity')
-    .orderBy('date', descending: true)
-    .limit(10)
-    .get();
+    final query =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .collection('activity')
+            .orderBy('date', descending: true)
+            .limit(10)
+            .get();
 
-if (!mounted) return;
+    if (!mounted) return;
 
-if (query.docs.isEmpty) {
-  setState(() {
-    hasMore = false;
-  });
-  return;
-}
+    if (query.docs.isEmpty) {
+      setState(() {
+        hasMore = false;
+      });
+      return;
+    }
 
-lastDocument = query.docs.last;
-_groupDocuments(query.docs, skipToday: true);
-
+    lastDocument = query.docs.last;
+    _groupDocuments(query.docs, skipToday: true);
   }
 
   Future<void> _loadNextGroup() async {
-if (user == null || isLoadingMore || !hasMore || lastDocument == null) return;
+    if (user == null || isLoadingMore || !hasMore || lastDocument == null)
+      return;
 
-setState(() {
-  isLoadingMore = true;
-});
+    setState(() {
+      isLoadingMore = true;
+    });
 
-final query = await FirebaseFirestore.instance
-    .collection('users')
-    .doc(user!.uid)
-    .collection('activity')
-    .orderBy('date', descending: true)
-    .startAfterDocument(lastDocument!)
-    .limit(10)
-    .get();
+    final query =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .collection('activity')
+            .orderBy('date', descending: true)
+            .startAfterDocument(lastDocument!)
+            .limit(10)
+            .get();
 
-if (!mounted) return;
+    if (!mounted) return;
 
-if (query.docs.isEmpty) {
-  setState(() {
-    hasMore = false;
-    isLoadingMore = false;
-  });
-  return;
-}
+    if (query.docs.isEmpty) {
+      setState(() {
+        hasMore = false;
+        isLoadingMore = false;
+      });
+      return;
+    }
 
-lastDocument = query.docs.last;
-_groupDocuments(query.docs);
+    lastDocument = query.docs.last;
+    _groupDocuments(query.docs);
 
-setState(() {
-  isLoadingMore = false;
-});
-
+    setState(() {
+      isLoadingMore = false;
+    });
   }
 
   void _groupDocuments(List<DocumentSnapshot> docs, {bool skipToday = false}) {
@@ -144,154 +145,162 @@ setState(() {
 
       groupedActivities[dateStr]!.add(doc);
     }
-     if (!mounted) return;
+    if (!mounted) return;
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-if (user == null) {
-  return const Scaffold(
-    body: Center(child: CircularProgressIndicator()),
-  );
-}
-
-
-return SafeArea(
-  child: Scaffold(
-      backgroundColor: Colors.white,
-      drawer: const AppDrawer(currentRoute: AppRoutes.home),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF673AB7),
-        elevation: 0,
-        leading: Builder(
-          builder:
-              (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Color.fromARGB(255, 255, 255, 255)),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-        ),
-        title: const Text(
-          'Головна',
-          style: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
-            fontSize: 22,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: const Color.fromARGB(255, 167, 166, 166),
-              child: Text(
-                (user!.email ?? '').substring(0, 1).toUpperCase(),
-                style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                if (notification is UserScrollNotification) {
-                  final direction = notification.direction;
-                  if (direction == ScrollDirection.reverse) {
-                    _fabVisible.value = false;
-                  } else if (direction == ScrollDirection.forward) {
-                    _fabVisible.value = true;
-                  }
-                }
-                return false;
-              },
-child: ListView.builder(
-  controller: _scrollController,
-  padding: const EdgeInsets.only(top: 12, bottom: 80),
-  itemCount: groupedActivities.length + 2, // +1 для todayGroup, +1 для loading
-  itemBuilder: (context, index) {
-    // Перший елемент — todayGroup
-    if (index == 0) {
-      return _buildTodayGroup();
+    if (user == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // Останній елемент — індикатор завантаження
-    if (index == groupedActivities.length + 1) {
-      return isLoadingMore
-          ? const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          : const SizedBox.shrink();
-    }
-
-    // Основні елементи — групи активностей по датах
-    final entry = groupedActivities.entries.elementAt(index - 1);
-    final dateStr = entry.key;
-    final date = DateTime.tryParse(dateStr);
-    final activities = entry.value;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (date != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8, top: 16),
-            child: Text(
-              _formatDateLabel(date),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-        ListView.builder(
-          itemCount: activities.length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, i) {
-            return _buildActivityItem(activities[i]);
-          },
-        ),
-        const Divider(thickness: 1),
-      ],
-    );
-  },
-)
-
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 16,
-            child: ValueListenableBuilder<bool>(
-              valueListenable: _fabVisible,
-              builder: (context, visible, _) {
-                return AnimatedSlide(
-                  offset: visible ? Offset.zero : const Offset(0, 2),
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  child: AnimatedOpacity(
-                    opacity: visible ? 1 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: IOSFloatingActionButton(
-                      text: 'Створити допис',
-                      onPressed: () async {
-                        await Navigator.pushNamed(context, AppRoutes.addClient);
-                      },
-                    ),
+    return Scaffold(
+        backgroundColor: Colors.white,
+        drawer: const AppDrawer(currentRoute: AppRoutes.home),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF673AB7),
+          elevation: 0,
+          leading: Builder(
+            builder:
+                (context) => IconButton(
+                  icon: const Icon(
+                    Icons.menu,
+                    color: Color.fromARGB(255, 255, 255, 255),
                   ),
-                );
-              },
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+          ),
+          title: const Text(
+            'Головна',
+            style: TextStyle(
+              color: Color.fromARGB(255, 255, 255, 255),
+              fontSize: 22,
             ),
           ),
-        ],
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: CircleAvatar(
+                backgroundColor: const Color.fromARGB(255, 167, 166, 166),
+                child: Text(
+                  (user!.email ?? '').substring(0, 1).toUpperCase(),
+                  style: const TextStyle(
+                    color: Color.fromARGB(255, 255, 255, 255),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification is UserScrollNotification) {
+                    final direction = notification.direction;
+                    if (direction == ScrollDirection.reverse) {
+                      _fabVisible.value = false;
+                    } else if (direction == ScrollDirection.forward) {
+                      _fabVisible.value = true;
+                    }
+                  }
+                  return false;
+                },
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.only(top: 12, bottom: 80),
+                  itemCount:
+                      groupedActivities.length +
+                      2, // +1 для todayGroup, +1 для loading
+                  itemBuilder: (context, index) {
+                    // Перший елемент — todayGroup
+                    if (index == 0) {
+                      return _buildTodayGroup();
+                    }
+
+                    // Останній елемент — індикатор завантаження
+                    if (index == groupedActivities.length + 1) {
+                      return isLoadingMore
+                          ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                          : const SizedBox.shrink();
+                    }
+
+                    // Основні елементи — групи активностей по датах
+                    final entry = groupedActivities.entries.elementAt(
+                      index - 1,
+                    );
+                    final dateStr = entry.key;
+                    final date = DateTime.tryParse(dateStr);
+                    final activities = entry.value;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (date != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8, top: 16),
+                            child: Text(
+                              _formatDateLabel(date),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ListView.builder(
+                          itemCount: activities.length,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, i) {
+                            return _buildActivityItem(activities[i]);
+                          },
+                        ),
+                        const Divider(thickness: 1),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 16,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _fabVisible,
+                builder: (context, visible, _) {
+                  return AnimatedSlide(
+                    offset: visible ? Offset.zero : const Offset(0, 2),
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: AnimatedOpacity(
+                      opacity: visible ? 1 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: IOSFloatingActionButton(
+                        text: 'Створити допис',
+                        onPressed: () async {
+                          await Navigator.pushNamed(
+                            context,
+                            AppRoutes.addClient,
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
