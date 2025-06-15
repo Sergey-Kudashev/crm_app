@@ -207,42 +207,61 @@ return SafeArea(
                 }
                 return false;
               },
-              child: ListView(
-                controller: _scrollController,
-                padding: const EdgeInsets.only(top: 12, bottom: 80),
-                children: [
-                  _buildTodayGroup(),
-                  ...groupedActivities.entries.map((entry) {
-                    final dateStr = entry.key;
-                    final date = DateTime.parse(dateStr);
-                    final activities = entry.value;
+child: ListView.builder(
+  controller: _scrollController,
+  padding: const EdgeInsets.only(top: 12, bottom: 80),
+  itemCount: groupedActivities.length + 2, // +1 для todayGroup, +1 для loading
+  itemBuilder: (context, index) {
+    // Перший елемент — todayGroup
+    if (index == 0) {
+      return _buildTodayGroup();
+    }
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8, top: 16),
-                          child: Text(
-                            _formatDateLabel(date),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                        ...activities.map((doc) => _buildActivityItem(doc)),
-                        const Divider(thickness: 1),
-                      ],
-                    );
-                  }),
-                  if (isLoadingMore)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                ],
+    // Останній елемент — індикатор завантаження
+    if (index == groupedActivities.length + 1) {
+      return isLoadingMore
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : const SizedBox.shrink();
+    }
+
+    // Основні елементи — групи активностей по датах
+    final entry = groupedActivities.entries.elementAt(index - 1);
+    final dateStr = entry.key;
+    final date = DateTime.tryParse(dateStr);
+    final activities = entry.value;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (date != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8, top: 16),
+            child: Text(
+              _formatDateLabel(date),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
               ),
+            ),
+          ),
+        ListView.builder(
+          itemCount: activities.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, i) {
+            return _buildActivityItem(activities[i]);
+          },
+        ),
+        const Divider(thickness: 1),
+      ],
+    );
+  },
+)
+
             ),
           ),
           Positioned(
