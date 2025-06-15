@@ -72,7 +72,7 @@ user = current;
             .doc(user!.uid)
             .collection('activity')
             .orderBy('date', descending: true)
-            .limit(50)
+            .limit(10)
             .get();
 
     if (!mounted) return;
@@ -106,7 +106,7 @@ user = current;
             .collection('activity')
             .orderBy('date', descending: true)
             .startAfter([Timestamp.fromDate(lastLoadedDate)])
-            .limit(50)
+            .limit(10)
             .get();
 
     if (!mounted) return;
