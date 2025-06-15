@@ -395,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
       icon = LucideIcons.trendingUp;
       iconColor = Colors.green;
     } else if (images.isNotEmpty) {
-      icon = LucideIcons.image;
+      icon = LucideIcons.pictureInPicture2;
       iconColor = Color(0xFF5DA1C5); 
     } else if (comment.isNotEmpty) {
       icon = LucideIcons.messageCircle;

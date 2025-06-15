@@ -504,7 +504,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                 icon = LucideIcons.trendingUp;
                 iconColor = Colors.green;
               } else if (images.isNotEmpty) {
-                icon = LucideIcons.image;
+                icon = LucideIcons.pictureInPicture2;
                 iconColor = Color(0xFF5DA1C5); 
               } else if (comment.isNotEmpty) {
                 icon = LucideIcons.messageCircle;
