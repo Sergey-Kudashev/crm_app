@@ -468,7 +468,7 @@ Future<void> _pickImage() async {
                           _scheduledDate != null &&
                                   _startTime != null &&
                                   _endTime != null
-                              ? const Color.fromARGB(255, 50, 138, 0)
+                              ? Colors.blueAccent
                               : Colors.white,
                       fontSize: 16,
                     ),
