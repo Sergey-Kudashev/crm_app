@@ -8,7 +8,7 @@ import 'package:crm_app/screens/today_screen.dart';
 import 'package:crm_app/screens/settings_screen.dart';
 
 class AppRoutes {
-  static const String login = '/';
+  // static const String login = '/';
   static const String home = '/home';
   static const String clients = '/clients';
   static const String calendar = '/calendar';

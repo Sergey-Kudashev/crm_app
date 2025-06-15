@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:crm_app/routes/app_routes.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:crm_app/screens/login_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   final String currentRoute;
@@ -143,11 +144,11 @@ class AppDrawer extends StatelessWidget {
               routeName: '',
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  AppRoutes.login,
-                  (route) => false,
-                );
+Navigator.of(context).pushAndRemoveUntil(
+  MaterialPageRoute(builder: (_) => const LoginScreen()),
+  (route) => false,
+);
+
               },
             ),
             const SizedBox(height: 16),
