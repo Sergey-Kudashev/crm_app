@@ -9,6 +9,9 @@ import '/widgets/autocomplete_text_field.dart';
 import 'package:crm_app/widgets/add_client_modals.dart';
 import 'package:crm_app/widgets/string_utils.dart';
 import 'package:crm_app/widgets/custom_snackbar.dart';
+import 'package:crm_app/widgets/image_utils.dart';
+import 'dart:typed_data';
+
 
 class AddClientScreen extends StatefulWidget {
   final String? fixedClientName;
@@ -28,7 +31,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
   final _phoneController = TextEditingController();
 
   List<String> _clientNames = [];
-  final List<File> _selectedImages = [];
+  final List<String> _selectedImages = []; // Cloudinary URLs
   final List<File> _originalImages = [];
 
   bool _isNewClient = false;
@@ -86,26 +89,33 @@ Future<void> _pickImage() async {
   if (pickedFile != null) {
     setState(() => _isImageUploading = true);
 
-    final originalFile = File(pickedFile.path);
-    final bytes = await originalFile.readAsBytes();
+    try {
+      final bytes = await pickedFile.readAsBytes();
 
-    final decoded = img.decodeImage(bytes);
-    if (decoded == null) {
+      final decoded = img.decodeImage(bytes);
+      if (decoded == null) {
+        setState(() => _isImageUploading = false);
+        return;
+      }
+
+      final resized = img.copyResize(decoded, width: 600);
+      final resizedBytes = Uint8List.fromList(img.encodeJpg(resized, quality: 85));
+
+      final cloudinaryUrl = await uploadImageToCloudinary(
+        bytes: resizedBytes,
+        fileName: 'client_${DateTime.now().millisecondsSinceEpoch}',
+      );
+
+      if (cloudinaryUrl != null) {
+        setState(() {
+          _selectedImages.add(cloudinaryUrl); // оновлено тип на String (URL)
+        });
+      }
+    } catch (e) {
+      print('Помилка при завантаженні зображення: $e');
+    } finally {
       setState(() => _isImageUploading = false);
-      return;
     }
-
-    final resized = img.copyResize(decoded, width: 600);
-    final resizedPath =
-        '${originalFile.parent.path}/resized_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final resizedFile = File(resizedPath)
-      ..writeAsBytesSync(img.encodeJpg(resized, quality: 85));
-
-    setState(() {
-      _selectedImages.add(resizedFile);
-      _originalImages.add(originalFile);
-      _isImageUploading = false;
-    });
   }
 }
 
@@ -149,8 +159,10 @@ Future<void> _submit() async {
     }, SetOptions(merge: true));
   }
 
-  final previewPaths = _selectedImages.map((file) => file.path).toList();
-  final originalPaths = _originalImages.map((file) => file.path).toList();
+final List<String> previewPaths = List.from(_selectedImages);
+final List<String> originalPaths = List.from(_originalImages);
+
+
 
   final commentData = {
     'comment': commentText,
@@ -402,10 +414,10 @@ Future<void> _submit() async {
             runSpacing: 8,
             children: _selectedImages
                 .map(
-                  (file) => ClipRRect(
+                  (url) => ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      file,
+                    child: Image.network(
+                      url,
                       width: 60,
                       height: 60,
                       fit: BoxFit.cover,

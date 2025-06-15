@@ -38,7 +38,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   cloud_firestore: ^4.13.1
   intl: ^0.18.1
-  image_picker: ^1.0.4
   firebase_storage: ^11.2.7
   table_calendar: ^3.0.9
   timeago: ^3.5.0
@@ -48,6 +47,8 @@ dependencies:
   url_launcher: ^6.2.4
   lucide_icons: ^0.257.0
   flutter_typeahead: ^4.3.7
+  http: ^0.13.5
+  image_picker: ^1.0.7
 
 
 
