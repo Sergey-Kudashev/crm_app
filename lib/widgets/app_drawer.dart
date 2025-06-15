@@ -35,7 +35,7 @@ class AppDrawer extends StatelessWidget {
                 () {
                   Navigator.pop(context);
                   if (currentRoute != routeName) {
-                    Navigator.pushReplacementNamed(context, routeName);
+                    Navigator.popAndPushNamed(context, routeName);
                   }
                 },
             child: Padding(
