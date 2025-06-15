@@ -24,7 +24,7 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#673AB7">
   <meta name="apple-mobile-web-app-title" content="Cliro">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -37,31 +37,12 @@
 </head>
 
 <body>
-  <script src="flutter_bootstrap.js" async></script>
-  <script>
-  // Перевіряємо, чи додаток запущений як PWA
-  const isInStandaloneMode = () =>
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true;
-
-  if (isInStandaloneMode()) {
-    let touchStartX = 0;
-
-    document.addEventListener('touchstart', function (event) {
-      touchStartX = event.touches[0].clientX;
-    }, { passive: false });
-
-    document.addEventListener('touchmove', function (event) {
-      const touchCurrentX = event.touches[0].clientX;
-
-      // Якщо свайп з лівого краю вліво (тобто iOS Back Swipe)
-      if (touchStartX < 25 && touchCurrentX - touchStartX > 10) {
-        // Забороняємо свайп назад
-        event.preventDefault();
-      }
-    }, { passive: false });
-  }
-</script>
+  <script src="flutter_bootstrap.js" async>
+  history.pushState(null, null, location.href);
+  window.addEventListener('popstate', function () {
+    history.pushState(null, null, location.href);
+  });
+  </script>
 
 </body>
 
