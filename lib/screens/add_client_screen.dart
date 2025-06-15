@@ -80,48 +80,45 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
   bool _isImageUploading = false;
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+Future<void> _pickImage() async {
+  final picker = ImagePicker();
+  final pickedFiles = await picker.pickMultiImage();
 
-    if (pickedFile != null) {
-      setState(() => _isImageUploading = true);
+  if (pickedFiles.isEmpty) return;
 
-      try {
-        final bytes = await pickedFile.readAsBytes();
+  setState(() => _isImageUploading = true);
 
-        final decoded = img.decodeImage(bytes);
-        if (decoded == null) {
-          setState(() => _isImageUploading = false);
-          return;
-        }
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-        final resized = img.copyResize(decoded, width: 600);
-        final resizedBytes = Uint8List.fromList(
-          img.encodeJpg(resized, quality: 85),
-        );
+    for (final pickedFile in pickedFiles) {
+      final bytes = await pickedFile.readAsBytes();
+      final decoded = img.decodeImage(bytes);
+      if (decoded == null) continue;
 
-        final user = FirebaseAuth.instance.currentUser;
-        if (user == null) return;
+      final resized = img.copyResize(decoded, width: 600);
+      final resizedBytes = Uint8List.fromList(
+        img.encodeJpg(resized, quality: 85),
+      );
 
-        final cloudinaryUrl = await uploadImageToCloudinary(
-          bytes: resizedBytes,
-          fileName: 'client_${DateTime.now().millisecondsSinceEpoch}',
-          folderPath: 'clients/${user.uid}', // <-- передаємо шлях
-        );
+      final cloudinaryUrl = await uploadImageToCloudinary(
+        bytes: resizedBytes,
+        fileName: 'client_${DateTime.now().millisecondsSinceEpoch}',
+        folderPath: 'clients/${user.uid}',
+      );
 
-        if (cloudinaryUrl != null) {
-          setState(() {
-            _selectedImages.add(cloudinaryUrl); // оновлено тип на String (URL)
-          });
-        }
-      } catch (e) {
-        print('Помилка при завантаженні зображення: $e');
-      } finally {
-        setState(() => _isImageUploading = false);
+      if (cloudinaryUrl != null) {
+        _selectedImages.add(cloudinaryUrl);
       }
     }
+  } catch (e) {
+    print('Помилка при завантаженні зображень: $e');
+  } finally {
+    setState(() => _isImageUploading = false);
   }
+}
+
 
   Future<void> _submit() async {
     final rawName = _nameController.text.trim();
