@@ -13,6 +13,11 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const AuthGate(),
       routes: AppRoutes.routes,
+      onGenerateRoute:
+          (settings) => MaterialPageRoute(
+            builder: (_) => const AuthGate(),
+            settings: settings,
+          ),
     );
   }
 }
