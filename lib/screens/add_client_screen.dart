@@ -160,7 +160,7 @@ Future<void> _submit() async {
   }
 
 final List<String> previewPaths = List.from(_selectedImages);
-final List<String> originalPaths = List.from(_originalImages);
+// final List<String> originalPaths = List.from(_originalImages);
 
 
 
@@ -169,7 +169,7 @@ final List<String> originalPaths = List.from(_originalImages);
     'date': now,
     'userId': user.uid,
     'images': previewPaths,
-    'originalImages': originalPaths,
+    // 'originalImages': originalPaths,
   };
 
   DateTime? fullStartDateTime;
@@ -206,7 +206,7 @@ final List<String> originalPaths = List.from(_originalImages);
     'createdAt': now,
     'userId': user.uid,
     'images': previewPaths,
-    'originalImages': originalPaths,
+    // 'originalImages': originalPaths,
   };
 
   if (fullStartDateTime != null && fullEndDateTime != null) {
