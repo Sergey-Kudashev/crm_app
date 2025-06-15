@@ -273,10 +273,12 @@ class _ClientInfoScreenState extends State<ClientInfoScreen> {
       appBar: AppBar(
         title: const Text(
           'Інформація клієнта',
-          style: TextStyle(color: Colors.white,
-          fontSize: 22),
+          style: TextStyle(color: Colors.white, fontSize: 22),
         ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: const IconThemeData(
+          color: Colors.white, // 🔹 Колір іконки назад та інших
+        ),
         foregroundColor: Colors.black87,
         elevation: 0,
       ),

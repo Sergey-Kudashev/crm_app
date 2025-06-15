@@ -74,7 +74,7 @@ class _FullImageViewState extends State<FullImageView> {
               child: SafeArea(
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(Icons.close, color: Colors.white, size: 28),
+                  child: const Icon(Icons.close, color: Color.fromARGB(255, 189, 0, 0), size: 28),
                 ),
               ),
             ),

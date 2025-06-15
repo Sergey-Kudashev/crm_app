@@ -16,7 +16,6 @@ import 'package:crm_app/widgets/сustom_action_dialog.dart';
 import 'package:crm_app/widgets/add_client_modals.dart';
 import 'package:crm_app/widgets/edit_comment_modal.dart';
 
-
 class ClientDetailsScreen extends StatefulWidget {
   final String clientName;
 
@@ -213,56 +212,53 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     return DateFormat('dd.MM.yyyy').format(date);
   }
 
-Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
-  if (user == null) return;
-  final docId = doc.id;
+  Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
+    if (user == null) return;
+    final docId = doc.id;
 
-  final nameRaw = doc['name'] ?? '';
-  final name = nameRaw.toString().toLowerCase(); // Додаємо перетворення в lowercase
+    final nameRaw = doc['name'] ?? '';
+    final name =
+        nameRaw.toString().toLowerCase(); // Додаємо перетворення в lowercase
 
-  final comment = doc['comment'] ?? '';
+    final comment = doc['comment'] ?? '';
 
-  final clientRef = FirebaseFirestore.instance
-      .collection('users')
-      .doc(user!.uid)
-      .collection('clients')
-      .doc(name);
+    final clientRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .collection('clients')
+        .doc(name);
 
-  // Видаляємо коментар з колекції comments клієнта
-  await clientRef
-      .collection('comments')
-      .doc(docId)
-      .delete();
+    // Видаляємо коментар з колекції comments клієнта
+    await clientRef.collection('comments').doc(docId).delete();
 
-  // Видаляємо саму активність
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user!.uid)
-      .collection('activity')
-      .doc(docId)
-      .delete();
+    // Видаляємо саму активність
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .collection('activity')
+        .doc(docId)
+        .delete();
 
-  // Додаємо лог про видалення
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user!.uid)
-      .collection('activity')
-      .add({
-        'name': name,
-        'comment': comment,
-        'date': DateTime.now(),
-        'userId': user!.uid,
-        'edited': false,
-        'deleted': true,
-        'action': 'deleted_record',
-      });
+    // Додаємо лог про видалення
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .collection('activity')
+        .add({
+          'name': name,
+          'comment': comment,
+          'date': DateTime.now(),
+          'userId': user!.uid,
+          'edited': false,
+          'deleted': true,
+          'action': 'deleted_record',
+        });
 
-  setState(() {
-    _displayedDocs.removeWhere((d) => d.id == docId);
-    _allDocs.removeWhere((d) => d.id == docId);
-  });
-}
-
+    setState(() {
+      _displayedDocs.removeWhere((d) => d.id == docId);
+      _allDocs.removeWhere((d) => d.id == docId);
+    });
+  }
 
   Widget _buildScheduledDate(dynamic scheduledAt, Map<String, dynamic> data) {
     DateTime startDate;
@@ -314,17 +310,16 @@ Future<void> _deleteAppointmentFromClient(DocumentSnapshot doc) async {
 
     if (scheduledAt == null) {
       // Просте редагування коментаря
-final result = await showEditCommentModal(context, comment);
+      final result = await showEditCommentModal(context, comment);
 
-if (result != null && result.isNotEmpty && result != comment) {
-  await appointmentRef.update({
-    'comment': result,
-    'date': DateTime.now(), // оновлюємо дату редагування
-    'type': 'edit',
-  });
-  await _loadInitialDocuments();
-}
-
+      if (result != null && result.isNotEmpty && result != comment) {
+        await appointmentRef.update({
+          'comment': result,
+          'date': DateTime.now(), // оновлюємо дату редагування
+          'type': 'edit',
+        });
+        await _loadInitialDocuments();
+      }
     } else {
       // Повноцінне редагування (з апоінтментом)
       if (scheduledEnd == null) return;
@@ -590,17 +585,7 @@ if (result != null && result.isNotEmpty && result != comment) {
                                                             (
                                                               _,
                                                             ) => FullImageView(
-                                                              photoUrls:
-                                                                  images
-                                                                      .map(
-                                                                        (
-                                                                          e,
-                                                                        ) => e.replaceFirst(
-                                                                          'file://',
-                                                                          '',
-                                                                        ),
-                                                                      )
-                                                                      .toList(),
+                                                              photoUrls: images,
                                                               initialIndex:
                                                                   images
                                                                       .indexOf(
@@ -669,7 +654,6 @@ if (result != null && result.isNotEmpty && result != comment) {
       ],
     );
   }
-
 
   Future<void> _handleActivityLongPress(
     DocumentSnapshot doc,
@@ -745,6 +729,9 @@ if (result != null && result.isNotEmpty && result != comment) {
           ),
         ),
         backgroundColor: Colors.deepPurple,
+        iconTheme: const IconThemeData(
+          color: Colors.white, // 🔹 Колір іконки назад та інших
+        ),
       ),
       body: Stack(
         children: [
