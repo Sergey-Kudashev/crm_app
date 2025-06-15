@@ -490,13 +490,13 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
 
               if (type == 'delete') {
                 icon = LucideIcons.trash2;
-                iconColor = Colors.red;
+                iconColor = Color.fromARGB(255, 189, 0, 0);
               } else if (type == 'edit') {
                 icon = LucideIcons.pencil;
                 iconColor = Colors.blueGrey;
-              } else if (isDeletedRecord) {
+              } else if (isDeletedRecord && scheduledAt != null) {
                 icon = LucideIcons.trendingDown;
-                iconColor = Colors.redAccent;
+                iconColor = Color.fromARGB(255, 189, 0, 0);
               } else if (isRescheduled) {
                 icon = LucideIcons.repeat;
                 iconColor = Colors.blueAccent;

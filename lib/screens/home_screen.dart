@@ -385,7 +385,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (type == 'edit') {
       icon = LucideIcons.pencil;
       iconColor = Colors.blueGrey;
-    } else if (isDeletedRecord) {
+    } else if (isDeletedRecord && scheduledAt != null) {
       icon = LucideIcons.trendingDown;
       iconColor = Color.fromARGB(255, 189, 0, 0);
     } else if (isRescheduled) {
