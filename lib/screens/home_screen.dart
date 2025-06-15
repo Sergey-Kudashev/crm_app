@@ -47,6 +47,8 @@ user = current;
     super.dispose();
   }
 
+  DocumentSnapshot? lastDocument;
+
   void _scrollListener() {
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 100 &&
@@ -66,63 +68,61 @@ user = current;
 
   Future<void> _loadInitialGroup() async {
     if (user == null) return;
-    final query =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user!.uid)
-            .collection('activity')
-            .orderBy('date', descending: true)
-            .limit(10)
-            .get();
+final query = await FirebaseFirestore.instance
+    .collection('users')
+    .doc(user!.uid)
+    .collection('activity')
+    .orderBy('date', descending: true)
+    .limit(10)
+    .get();
 
-    if (!mounted) return;
+if (!mounted) return;
 
-    if (query.docs.isEmpty) {
-      setState(() {
-        hasMore = false;
-      });
-      return;
-    }
+if (query.docs.isEmpty) {
+  setState(() {
+    hasMore = false;
+  });
+  return;
+}
 
-    _groupDocuments(query.docs, skipToday: true);
+lastDocument = query.docs.last;
+_groupDocuments(query.docs, skipToday: true);
+
   }
 
   Future<void> _loadNextGroup() async {
-    if (user == null || isLoadingMore || !hasMore) return;
+if (user == null || isLoadingMore || !hasMore || lastDocument == null) return;
 
-    setState(() {
-      isLoadingMore = true;
-    });
+setState(() {
+  isLoadingMore = true;
+});
 
-    final lastLoadedDate =
-        loadedDates.isNotEmpty
-            ? DateTime.parse(loadedDates.last)
-            : DateTime.now();
+final query = await FirebaseFirestore.instance
+    .collection('users')
+    .doc(user!.uid)
+    .collection('activity')
+    .orderBy('date', descending: true)
+    .startAfterDocument(lastDocument!)
+    .limit(10)
+    .get();
 
-    final query =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user!.uid)
-            .collection('activity')
-            .orderBy('date', descending: true)
-            .startAfter([Timestamp.fromDate(lastLoadedDate)])
-            .limit(10)
-            .get();
+if (!mounted) return;
 
-    if (!mounted) return;
+if (query.docs.isEmpty) {
+  setState(() {
+    hasMore = false;
+    isLoadingMore = false;
+  });
+  return;
+}
 
-    if (query.docs.isEmpty) {
-      setState(() {
-        hasMore = false;
-      });
-      return;
-    }
+lastDocument = query.docs.last;
+_groupDocuments(query.docs);
 
-    _groupDocuments(query.docs);
+setState(() {
+  isLoadingMore = false;
+});
 
-    setState(() {
-      isLoadingMore = false;
-    });
   }
 
   void _groupDocuments(List<DocumentSnapshot> docs, {bool skipToday = false}) {
