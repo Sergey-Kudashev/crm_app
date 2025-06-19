@@ -47,30 +47,30 @@ Future<String?> showEditCommentModal(
                 Column(
                   children: [
                     // Expanded(
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(
-                            context,
-                          ).pop(commentController.text.trim());
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.deepPurple,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Зберегти',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                // fontWeight: FontWeight.w600,
-                              ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(
+                          context,
+                        ).pop(commentController.text.trim());
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.deepPurple,
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Зберегти',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
                             ),
                           ),
                         ),
                       ),
+                    ),
                     // ),
                     const SizedBox(width: 12),
                     // Expanded(
@@ -89,8 +89,8 @@ Future<String?> showEditCommentModal(
                             'Скасувати',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 16,
-                              // fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
                             ),
                           ),
                         ),

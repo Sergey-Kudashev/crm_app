@@ -149,7 +149,7 @@ Future<bool?> showCustomDeleteConfirmationDialog(
                     onPressed: () => Navigator.of(context).pop(false),
                     child: Text(
                       'Скасувати',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
                   const SizedBox(width: 12),
