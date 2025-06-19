@@ -528,113 +528,128 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onLongPress: () async {
-                      await _handleActivityLongPress(
-                        doc,
-                        data,
-                        scheduledAt,
-                        scheduledEnd,
-                        comment,
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(icon, size: 32, color: iconColor),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (isDeletedRecord)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: Text(
-                                      'Запис було видалено:\n${data['comment'] ?? ''}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Color.fromARGB(255, 75, 0, 0),
-                                      ),
-                                    ),
-                                  )
-                                else ...[
-                                  if (scheduledAt != null)
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onLongPress: () async {
+                        await _handleActivityLongPress(
+                          doc,
+                          data,
+                          scheduledAt,
+                          scheduledEnd,
+                          comment,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(icon, size: 32, color: iconColor),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (isDeletedRecord)
                                     Padding(
-                                      padding: const EdgeInsets.only(top: 2.0),
-                                      child: _buildScheduledDate(
-                                        scheduledAt,
-                                        data,
-                                      ),
-                                    ),
-                                  if (images.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8.0),
-                                      child: Wrap(
-                                        spacing: 6,
-                                        children:
-                                            images.map((path) {
-                                              final fixedPath = path
-                                                  .replaceFirst('file://', '');
-                                              return GestureDetector(
-                                                onTap:
-                                                    () => Navigator.of(
-                                                      context,
-                                                    ).push(
-                                                      MaterialPageRoute(
-                                                        builder:
-                                                            (
-                                                              _,
-                                                            ) => FullImageView(
-                                                              photoUrls: images,
-                                                              initialIndex:
-                                                                  images
-                                                                      .indexOf(
-                                                                        path,
-                                                                      ),
-                                                            ),
-                                                      ),
-                                                    ),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(6),
-                                                  child: CachedFileImage(
-                                                    filePath: fixedPath,
-                                                  ),
-                                                ),
-                                              );
-                                            }).toList(),
-                                      ),
-                                    ),
-                                  if (comment.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4.0),
+                                      padding: const EdgeInsets.only(top: 4),
                                       child: Text(
-                                        comment,
+                                        'Запис було видалено:\n${data['comment'] ?? ''}',
                                         style: const TextStyle(
                                           fontSize: 14,
-                                          color: Colors.black,
+                                          color: Color.fromARGB(255, 75, 0, 0),
                                         ),
                                       ),
-                                    ),
-                                ],
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6.0),
-                                  child: Text(
-                                    ago,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey,
+                                    )
+                                  else ...[
+                                    if (scheduledAt != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 2.0,
+                                        ),
+                                        child: _buildScheduledDate(
+                                          scheduledAt,
+                                          data,
+                                        ),
+                                      ),
+                                    if (images.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 8.0,
+                                        ),
+                                        child: Wrap(
+                                          spacing: 6,
+                                          children:
+                                              images.map((path) {
+                                                final fixedPath = path
+                                                    .replaceFirst(
+                                                      'file://',
+                                                      '',
+                                                    );
+                                                return GestureDetector(
+                                                  onTap:
+                                                      () => Navigator.of(
+                                                        context,
+                                                      ).push(
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (
+                                                                _,
+                                                              ) => FullImageView(
+                                                                photoUrls:
+                                                                    images,
+                                                                initialIndex:
+                                                                    images
+                                                                        .indexOf(
+                                                                          path,
+                                                                        ),
+                                                              ),
+                                                        ),
+                                                      ),
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                    child: CachedFileImage(
+                                                      filePath: fixedPath,
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                        ),
+                                      ),
+                                    if (comment.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 4.0,
+                                        ),
+                                        child: Text(
+                                          comment,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 6.0),
+                                    child: Text(
+                                      ago,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
