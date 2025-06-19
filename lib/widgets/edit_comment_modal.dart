@@ -27,7 +27,7 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                     controller: commentController,
                     maxLines: 4,
                     placeholder: 'Введіть коментар',
-                    padding: const EdgeInsets.all(12),
+                    // padding: const EdgeInsets.all(12),
                     decoration: null, // Знімаємо внутрішній декор, бо вже є обгортка
                   ),
                 ),
@@ -40,7 +40,7 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                 },
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  // padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.deepPurple, // фоновий колір кнопки "Зберегти"
                     borderRadius: BorderRadius.circular(8),
@@ -61,7 +61,7 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
               },
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                // padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: Color.fromARGB(255, 189, 0, 0), // червоний фон
                   borderRadius: BorderRadius.circular(8),
