@@ -15,6 +15,7 @@ import 'package:flutter/rendering.dart';
 import 'package:crm_app/widgets/сustom_action_dialog.dart';
 import 'package:crm_app/widgets/add_client_modals.dart';
 import 'package:crm_app/widgets/edit_comment_modal.dart';
+import 'package:crm_app/widgets/custom_snackbar.dart';
 
 class ClientDetailsScreen extends StatefulWidget {
   final String clientName;
@@ -506,7 +507,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                 iconColor = Colors.green;
               } else if (images.isNotEmpty) {
                 icon = LucideIcons.pictureInPicture2;
-                iconColor = Color(0xFF5DA1C5); 
+                iconColor = Color(0xFF5DA1C5);
               } else if (comment.isNotEmpty) {
                 icon = LucideIcons.messageCircle;
                 iconColor = Colors.grey;
@@ -669,9 +670,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     final isDeletedRecord = data['action'] == 'deleted_record';
 
     if (isDeletedRecord) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Цей запис було видалено')));
+      showCustomSnackBar(context, 'Цей запис було видалено.', isSuccess: false);
       return;
     }
 
