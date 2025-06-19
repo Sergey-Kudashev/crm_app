@@ -65,14 +65,14 @@ Future<String?> showEditCommentModal(
                               style: TextStyle(
                                 color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 20,
+                              fontSize: 16,
                               ),
                             ),
                           ),
                         ),
                       ),
                     // ),
-                    const SizedBox(width: 12),
+                    const SizedBox(height: 12),
                     // Expanded(
                     GestureDetector(
                       onTap: () {
@@ -90,7 +90,7 @@ Future<String?> showEditCommentModal(
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 20,
+                              fontSize: 16,
                             ),
                           ),
                         ),
