@@ -43,7 +43,7 @@ Future<String?> showEditCommentModal(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 Column(
                   children: [
                     // Expanded(
