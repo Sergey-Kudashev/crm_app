@@ -72,7 +72,7 @@ Future<String?> showEditCommentModal(
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 30),
                     // Expanded(
                     GestureDetector(
                       onTap: () {
