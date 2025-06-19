@@ -251,6 +251,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
           'userId': user!.uid,
           'edited': false,
           'deleted': true,
+          'type': 'delete',
           'action': 'deleted_record',
         });
 
