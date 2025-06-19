@@ -379,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
     IconData icon;
     Color iconColor = Colors.black;
 
-    if (type == 'delete') {
+    if (type == 'delete' || type == 'deleted_record') {
       icon = LucideIcons.trash2;
       iconColor = Color.fromARGB(255, 189, 0, 0);
     } else if (type == 'edit') {
