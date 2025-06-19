@@ -1,8 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-Future<String?> showEditCommentModal(BuildContext context, String initialComment) {
-  final TextEditingController commentController = TextEditingController(text: initialComment);
+Future<String?> showEditCommentModal(
+  BuildContext context,
+  String initialComment,
+) {
+  final TextEditingController commentController = TextEditingController(
+    text: initialComment,
+  );
 
   return showCupertinoModalPopup<String>(
     context: context,
@@ -25,10 +30,7 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
               children: [
                 const Text(
                   'Редагувати коментар',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 CupertinoTextField(
@@ -47,20 +49,23 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.of(context).pop(commentController.text.trim());
+                          Navigator.of(
+                            context,
+                          ).pop(commentController.text.trim());
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
                             color: Colors.deepPurple,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(50),
                           ),
                           child: const Center(
                             child: Text(
                               'Зберегти',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                                // fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -69,30 +74,31 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                     ),
                     const SizedBox(width: 12),
                     // Expanded(
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop(null);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 189, 0, 0),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Скасувати',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop(null);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(255, 189, 0, 0),
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Скасувати',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              // fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                       ),
+                    ),
                     // ),
                   ],
-                )
+                ),
               ],
             ),
           ),
