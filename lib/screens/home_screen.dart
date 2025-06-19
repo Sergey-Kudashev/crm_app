@@ -406,7 +406,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return InkWell(
       highlightColor: const Color.fromARGB(255, 119, 85, 177),
-      splashFactory: NoSplash.splashFactory,
+      borderRadius: BorderRadius.circular(8),
+      // splashFactory: NoSplash.splashFactory,
       onTap: () async {
         await Navigator.of(context).push(
           MaterialPageRoute(
