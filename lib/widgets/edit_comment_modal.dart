@@ -54,7 +54,7 @@ Future<String?> showEditCommentModal(
                           ).pop(commentController.text.trim());
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.deepPurple,
                             borderRadius: BorderRadius.circular(50),
@@ -79,7 +79,7 @@ Future<String?> showEditCommentModal(
                         Navigator.of(context).pop(null);
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           color: Color.fromARGB(255, 189, 0, 0),
                           borderRadius: BorderRadius.circular(50),
