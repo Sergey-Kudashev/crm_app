@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-Future<String?> showCustomActionDialog(BuildContext context, {
+Future<String?> showCustomActionDialog(
+  BuildContext context, {
   required String clientName,
   required String startTime,
   required String endTime,
@@ -14,34 +15,46 @@ Future<String?> showCustomActionDialog(BuildContext context, {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                clientName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '$startTime – $endTime',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(height: 24),
 
-              // Кнопки в колонку
+              // Блок 1: Назва + час
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    clientName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$startTime – $endTime',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 32),
+
+              // Блок 2: Кнопка "Редагувати"
               _buildActionButton(context, 'Редагувати', Colors.deepPurple, () {
                 Navigator.of(context).pop('edit');
               }),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 16),
+
+              // Блок 3: Кнопка "Видалити"
               _buildActionButton(context, 'Видалити', Colors.red, () {
                 Navigator.of(context).pop('delete');
               }),
@@ -53,7 +66,7 @@ Future<String?> showCustomActionDialog(BuildContext context, {
   );
 }
 
-Widget _buildActionButton(BuildContext context, String text, Color textColor, VoidCallback onTap) {
+Widget _buildActionButton(BuildContext context, String text, Color backgroundColor, VoidCallback onTap) {
   return InkWell(
     borderRadius: BorderRadius.circular(50),
     onTap: onTap,
@@ -61,14 +74,14 @@ Widget _buildActionButton(BuildContext context, String text, Color textColor, Vo
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(50),
       ),
       child: Center(
         child: Text(
           text,
-          style: TextStyle(
-            color: textColor,
+          style: const TextStyle(
+            color: Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -78,7 +91,8 @@ Widget _buildActionButton(BuildContext context, String text, Color textColor, Vo
   );
 }
 
-Future<bool?> showCustomDeleteConfirmationDialog(BuildContext context, {
+Future<bool?> showCustomDeleteConfirmationDialog(
+  BuildContext context, {
   required String title,
   required String message,
 }) {
@@ -128,7 +142,7 @@ Future<bool?> showCustomDeleteConfirmationDialog(BuildContext context, {
                   const SizedBox(width: 12),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: Color.fromARGB(255, 189, 0, 0),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
