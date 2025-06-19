@@ -25,8 +25,8 @@ Future<String?> showEditCommentModal(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
                   'Редагувати коментар',
@@ -43,34 +43,34 @@ Future<String?> showEditCommentModal(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 Column(
                   children: [
                     // Expanded(
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(
-                          context,
-                        ).pop(commentController.text.trim());
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.deepPurple,
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'Зберегти',
-                            style: TextStyle(
-                              color: Colors.white,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(
+                            context,
+                          ).pop(commentController.text.trim());
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.deepPurple,
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Зберегти',
+                              style: TextStyle(
+                                color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 20,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
                     // ),
                     const SizedBox(width: 12),
                     // Expanded(
