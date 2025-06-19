@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart'; // для Color
+import 'package:flutter/material.dart';
 
 Future<String?> showEditCommentModal(BuildContext context, String initialComment) {
   final TextEditingController commentController = TextEditingController(text: initialComment);
@@ -18,14 +18,17 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
             message: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: CupertinoTextField(
-                  controller: commentController,
-                  maxLines: 4,
-                  placeholder: 'Введіть коментар',
-                  padding: const EdgeInsets.all(12),
+                child: Container(
                   decoration: BoxDecoration(
-                    color: CupertinoColors.white,
+                    color: Colors.white, // Білий фон блоку з текстом
                     borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: CupertinoTextField(
+                    controller: commentController,
+                    maxLines: 4,
+                    placeholder: 'Введіть коментар',
+                    padding: const EdgeInsets.all(12),
+                    decoration: null, // Знімаємо внутрішній декор, бо вже є обгортка
                   ),
                 ),
               ),
@@ -35,7 +38,20 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                 onPressed: () {
                   Navigator.of(context).pop(commentController.text.trim());
                 },
-                child: const Text('Зберегти'),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple, // фоновий колір кнопки "Зберегти"
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Зберегти',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
               ),
             ],
             cancelButton: CupertinoActionSheetAction(
@@ -43,10 +59,18 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
               onPressed: () {
                 Navigator.of(context).pop(null);
               },
-              child: const Text(
-                'Скасувати',
-                style: TextStyle(
-                  color: Color.fromARGB(255, 189, 0, 0),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 189, 0, 0), // червоний фон
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Скасувати',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ),

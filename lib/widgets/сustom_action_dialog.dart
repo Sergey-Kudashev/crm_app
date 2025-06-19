@@ -55,7 +55,7 @@ Future<String?> showCustomActionDialog(
               const SizedBox(height: 16),
 
               // Блок 3: Кнопка "Видалити"
-              _buildActionButton(context, 'Видалити', Colors.red, () {
+              _buildActionButton(context, 'Видалити', Color.fromARGB(255, 189, 0, 0), () {
                 Navigator.of(context).pop('delete');
               }),
             ],
