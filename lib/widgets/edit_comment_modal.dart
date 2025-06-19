@@ -9,66 +9,91 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
     builder: (context) {
       final mediaQuery = MediaQuery.of(context);
 
-      return Padding(
-        padding: mediaQuery.viewInsets, // зсуває модалку над клавіатурою
-        child: SafeArea(
-          top: false,
-          child: CupertinoActionSheet(
-            title: const Text('Редагувати коментар'),
-            message: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+      return Material(
+        color: Colors.black.withOpacity(0.2),
+        child: Center(
+          child: Container(
+            margin: mediaQuery.viewInsets,
+            padding: const EdgeInsets.all(20),
+            width: MediaQuery.of(context).size.width * 0.9,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Редагувати коментар',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: CupertinoTextField(
+                const SizedBox(height: 12),
+                CupertinoTextField(
                   controller: commentController,
                   maxLines: 4,
                   placeholder: 'Введіть коментар',
                   padding: const EdgeInsets.all(12),
-                  decoration: null,
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.systemGrey6,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ),
-            ),
-            actions: [
-              CupertinoActionSheetAction(
-                onPressed: () {
-                  Navigator.of(context).pop(commentController.text.trim());
-                },
-                child: Container(
-                  alignment: Alignment.center,
-                  height: 48,
-                  color: Colors.deepPurple, // фіолетовий фон
-                  child: const Text(
-                    'Зберегти',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop(commentController.text.trim());
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.deepPurple,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Зберегти',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ],
-            cancelButton: CupertinoActionSheetAction(
-              isDefaultAction: true,
-              onPressed: () {
-                Navigator.of(context).pop(null);
-              },
-              child: Container(
-                alignment: Alignment.center,
-                height: 48,
-                color: const Color.fromARGB(255, 189, 0, 0), // червоний фон
-                child: const Text(
-                  'Скасувати',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop(null);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(255, 189, 0, 0),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Скасувати',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ],
             ),
           ),
         ),
