@@ -25,8 +25,8 @@ Future<String?> showEditCommentModal(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 const Text(
                   'Редагувати коментар',
@@ -46,8 +46,8 @@ Future<String?> showEditCommentModal(
                 const SizedBox(height: 24),
                 Column(
                   children: [
-                    Expanded(
-                      child: GestureDetector(
+                    // Expanded(
+                      GestureDetector(
                         onTap: () {
                           Navigator.of(
                             context,
@@ -71,8 +71,8 @@ Future<String?> showEditCommentModal(
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 30),
+                    // ),
+                    const SizedBox(width: 12),
                     // Expanded(
                     GestureDetector(
                       onTap: () {
