@@ -406,6 +406,7 @@ class _CalendarScreenState extends State<CalendarScreen>
                                     clientName: capitalizeWords(clientName),
                                     startTime: formatTime(startDate),
                                     endTime: formatTime(endDate),
+                                    comment: comment,
                                   );
 
                               if (selectedAction == 'delete') {

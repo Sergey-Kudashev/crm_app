@@ -403,6 +403,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                       endTime: formatTime(
                                                         scheduledEnd,
                                                       ),
+                                                      comment: comment,
                                                     );
                                                 isPressedNotifier.value = false;
 

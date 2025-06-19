@@ -691,6 +691,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
       clientName: capitalizeWords(widget.clientName),
       startTime: formatTime(scheduledAt),
       endTime: formatTime(scheduledEnd),
+      comment: comment,
     );
 
     if (selectedAction == 'delete') {

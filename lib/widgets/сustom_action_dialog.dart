@@ -5,6 +5,7 @@ Future<String?> showCustomActionDialog(
   required String clientName,
   required String startTime,
   required String endTime,
+  required String comment, // 🆕 Додаємо параметр
 }) {
   return showDialog<String>(
     context: context,
@@ -22,7 +23,7 @@ Future<String?> showCustomActionDialog(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
 
-              // Блок 1: Назва + час
+              // Блок 1: Назва + час + коментар
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -42,19 +43,30 @@ Future<String?> showCustomActionDialog(
                       color: Colors.grey.shade600,
                     ),
                   ),
+                  const SizedBox(height: 12),
+
+                  // 🆕 Коментар, обрізаний до 100 символів
+                  Text(
+                    comment.length > 100 ? '${comment.substring(0, 100)}…' : comment,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                  ),
                 ],
               ),
 
               const SizedBox(height: 32),
 
-              // Блок 2: Кнопка "Редагувати"
+              // Кнопка "Редагувати"
               _buildActionButton(context, 'Редагувати', Colors.deepPurple, () {
                 Navigator.of(context).pop('edit');
               }),
 
               const SizedBox(height: 16),
 
-              // Блок 3: Кнопка "Видалити"
+              // Кнопка "Видалити"
               _buildActionButton(context, 'Видалити', Color.fromARGB(255, 189, 0, 0), () {
                 Navigator.of(context).pop('delete');
               }),
@@ -65,6 +77,7 @@ Future<String?> showCustomActionDialog(
     },
   );
 }
+
 
 Widget _buildActionButton(BuildContext context, String text, Color backgroundColor, VoidCallback onTap) {
   return InkWell(
