@@ -532,6 +532,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
+                      splashColor: Colors.deepPurple,
                       onLongPress: () async {
                         await _handleActivityLongPress(
                           doc,
