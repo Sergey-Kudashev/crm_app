@@ -396,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
       iconColor = Colors.green;
     } else if (images.isNotEmpty) {
       icon = LucideIcons.pictureInPicture2;
-      iconColor = Color(0xFF5DA1C5); 
+      iconColor = Color(0xFF5DA1C5);
     } else if (comment.isNotEmpty) {
       icon = LucideIcons.messageCircle;
       iconColor = Colors.grey;
@@ -405,6 +405,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return InkWell(
+      highlightColor: const Color.fromARGB(255, 119, 85, 177),
+      splashFactory: NoSplash.splashFactory,
       onTap: () async {
         await Navigator.of(context).push(
           MaterialPageRoute(
