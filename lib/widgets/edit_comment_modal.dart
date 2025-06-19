@@ -26,23 +26,23 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                 const Text(
                   'Редагувати коментар',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 12),
                 CupertinoTextField(
                   controller: commentController,
-                  maxLines: 4,
+                  maxLines: 6,
                   placeholder: 'Введіть коментар',
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey6,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 const SizedBox(height: 24),
-                Row(
+                Column(
                   children: [
                     Expanded(
                       child: GestureDetector(
@@ -53,7 +53,7 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
                             color: Colors.deepPurple,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Center(
                             child: Text(
@@ -77,7 +77,7 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
                             color: Color.fromARGB(255, 189, 0, 0),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Center(
                             child: Text(
