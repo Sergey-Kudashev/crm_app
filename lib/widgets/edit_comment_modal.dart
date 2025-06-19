@@ -68,8 +68,8 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: GestureDetector(
+                    // Expanded(
+                      GestureDetector(
                         onTap: () {
                           Navigator.of(context).pop(null);
                         },
@@ -90,7 +90,7 @@ Future<String?> showEditCommentModal(BuildContext context, String initialComment
                           ),
                         ),
                       ),
-                    ),
+                    // ),
                   ],
                 )
               ],
