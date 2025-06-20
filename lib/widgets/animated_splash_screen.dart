@@ -13,18 +13,26 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   late final AnimationController _moveController;
   late final Animation<double> _moveAnimation;
   late final AnimationController _fadeController;
+  late Future<void> _preloadFuture;
 
   @override
   void initState() {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+  statusBarColor: Colors.white,
+  statusBarIconBrightness: Brightness.dark,
+));
+
     super.initState();
 
-    // Контролер руху
+    // ініціалізація preload логіки
+    _preloadFuture = _preloadHome();
+
+    // Анімація руху
     _moveController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
-    // Анімація зміщення (вниз 50 → вверх до -200)
     _moveAnimation = TweenSequence([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: 50.0), weight: 30),
       TweenSequenceItem(tween: Tween(begin: 50.0, end: -200.0), weight: 70),
@@ -33,28 +41,32 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
       curve: Curves.easeInOut,
     ));
 
-    // Fade-out логотипа
+    // Анімація зникнення
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
 
-    // Запуск анімації
     _startAnimation();
   }
 
-  Future<void> _startAnimation() async {
+  Future<void> _preloadHome() async {
+    // тут можеш preload'ити щось
     await Future.delayed(const Duration(milliseconds: 300));
-    await _moveController.forward();
+  }
+
+  Future<void> _startAnimation() async {
+    await Future.wait([
+      _moveController.forward(),
+      _preloadFuture,
+    ]);
     await _fadeController.forward();
 
-    // Змінюємо статусбар
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.deepPurple,
       statusBarIconBrightness: Brightness.light,
     ));
 
-    // Переходимо на головний екран
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/home');
     }
@@ -74,21 +86,25 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
       body: AnimatedBuilder(
         animation: Listenable.merge([_moveController, _fadeController]),
         builder: (context, child) {
-          return Stack(
-            alignment: Alignment.center,
-            children: [
-              Transform.translate(
-                offset: Offset(0, _moveAnimation.value),
-                child: Opacity(
-                  opacity: 1.0 - _fadeController.value,
-                  child: Image.asset(
-                    'assets/splash_logo.png',
-                    width: 120,
-                    height: 120,
+          return SizedBox.expand(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Transform.translate(
+                  offset: Offset(0, _moveAnimation.value),
+                  child: Opacity(
+                    opacity: 1.0 - _fadeController.value,
+                    child: Center(
+                      child: Image.asset(
+                        'assets/splash_logo.png',
+                        width: 120,
+                        height: 120,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),

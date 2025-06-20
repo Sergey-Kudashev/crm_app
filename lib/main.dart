@@ -17,8 +17,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: Colors.white, // Під splash
-    statusBarIconBrightness: Brightness.dark,
+    // statusBarColor: Colors.white, // Під splash
+    // statusBarIconBrightness: Brightness.dark,
   ));
 
   timeago.setLocaleMessages('uk', timeago.UkMessages());
