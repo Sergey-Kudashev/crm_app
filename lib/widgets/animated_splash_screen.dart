@@ -23,7 +23,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
   @override
   void initState() {
-setThemeColorForWeb();
+// setThemeColorForWeb();
 
     super.initState();
 
@@ -93,12 +93,12 @@ setThemeColorForWeb();
     //   statusBarColor: Colors.deepPurple,
     //   statusBarIconBrightness: Brightness.light,
     // ));
-    if (kIsWeb) {
-  html.document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', '#673AB7');
-}
-
+//     if (kIsWeb) {
+//   html.document
+//       .querySelector('meta[name="theme-color"]')
+//       ?.setAttribute('content', '#673AB7');
+// }
+setThemeColorForWeb();
 
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/home');
