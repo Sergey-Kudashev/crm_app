@@ -23,10 +23,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
   @override
   void initState() {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.white,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+setThemeColorForWeb();
 
     super.initState();
 
@@ -59,6 +56,14 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
     _startAnimation();
   }
+
+  void setThemeColorForWeb() {
+  if (kIsWeb) {
+    html.document
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute('content', '#673AB7');
+  }
+}
 
   Future<void> _preloadHome() async {
     final user = FirebaseAuth.instance.currentUser;
