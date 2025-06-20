@@ -39,7 +39,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
     _moveAnimation = TweenSequence([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: 50.0), weight: 30),
-      TweenSequenceItem(tween: Tween(begin: 50.0, end: -500.0), weight: 70),
+      TweenSequenceItem(tween: Tween(begin: 50.0, end: -200.0), weight: 70),
     ]).animate(CurvedAnimation(
       parent: _moveController,
       curve: Curves.easeInOut,
@@ -84,10 +84,10 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
     ]);
     await _fadeController.forward();
 
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.deepPurple,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    // SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    //   statusBarColor: Colors.deepPurple,
+    //   statusBarIconBrightness: Brightness.light,
+    // ));
     if (kIsWeb) {
   html.document
       .querySelector('meta[name="theme-color"]')
