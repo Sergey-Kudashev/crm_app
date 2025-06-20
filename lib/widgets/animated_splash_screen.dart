@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:html' as html;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 
 class AnimatedSplashScreen extends StatefulWidget {
   const AnimatedSplashScreen({super.key});
@@ -85,6 +88,12 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
       statusBarColor: Colors.deepPurple,
       statusBarIconBrightness: Brightness.light,
     ));
+    if (kIsWeb) {
+  html.document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', '#673AB7');
+}
+
 
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/home');
