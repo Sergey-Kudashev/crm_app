@@ -15,10 +15,9 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🎨 Налаштування кольору статус-бара
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: Color(0xFF673AB7),
-    statusBarIconBrightness: Brightness.light,
+    statusBarColor: Colors.white, // Під splash
+    statusBarIconBrightness: Brightness.dark,
   ));
 
   timeago.setLocaleMessages('uk', timeago.UkMessages());
