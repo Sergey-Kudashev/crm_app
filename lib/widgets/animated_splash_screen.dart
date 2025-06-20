@@ -44,6 +44,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   }
 
   Future<void> _startAnimation() async {
+    await Future.delayed(const Duration(milliseconds: 300));
     await _moveController.forward();
     await _fadeController.forward();
 

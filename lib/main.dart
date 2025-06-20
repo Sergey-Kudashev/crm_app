@@ -6,8 +6,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'widgets/splash_wrapper.dart';
 
-import 'app.dart';
+// import 'app.dart';
 import 'firebase_options.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -36,5 +37,5 @@ void main() async {
         : null,
   );
 
-  runApp(const MyApp());
+  runApp(const SplashWrapper());
 }
