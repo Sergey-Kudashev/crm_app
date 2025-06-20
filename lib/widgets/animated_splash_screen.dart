@@ -82,7 +82,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
                 child: Opacity(
                   opacity: 1.0 - _fadeController.value,
                   child: Image.asset(
-                    'web/splash_logo.png',
+                    'web/logo.png',
                     width: 120,
                     height: 120,
                   ),
