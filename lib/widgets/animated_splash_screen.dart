@@ -12,7 +12,6 @@ class AnimatedSplashScreen extends StatefulWidget {
 }
 
 class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
-  // bool _gifLoaded = false;
   bool _gifFailed = false;
 
   @override
@@ -63,14 +62,15 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
         child: _gifFailed
             ? Image.asset(
                 'assets/splash_logo.png',
-                width: 160,
-                height: 160,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               )
             : Image.asset(
                 'assets/splash.gif',
-                width: 240,
-                height: 240,
-                fit: BoxFit.contain,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
                 gaplessPlayback: true,
                 errorBuilder: (context, error, stackTrace) {
                   setState(() {
@@ -78,8 +78,9 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
                   });
                   return Image.asset(
                     'assets/splash_logo.png',
-                    width: 160,
-                    height: 160,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
                   );
                 },
               ),
