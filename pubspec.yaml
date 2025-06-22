@@ -56,13 +56,14 @@ dependencies:
 flutter_native_splash:
   color: "#FFFFFF"
   image: assets/splash_logo.png
+  image_dark: assets/splash_logo.png
+  web_image_mode: contain
   android: true
   ios: true
   web: true
   fullscreen: true
 
-  image_dark: assets/splash_logo.png
-  web_image_mode: contain
+
 
 dev_dependencies:
   flutter_native_splash: ^2.3.10
