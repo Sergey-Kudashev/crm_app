@@ -47,18 +47,23 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
     }
   }
 
-  Future<void> _initVideo() async {
-    _videoController = VideoPlayerController.asset('assets/videos/splash.mp4');
-    await _videoController.initialize();
-    _videoController.setLooping(false);
-    _videoController.play();
+Future<void> _initVideo() async {
+  _videoController = VideoPlayerController.asset('assets/videos/splash.mp4');
+  await _videoController.initialize();
+  _videoController.setLooping(false);
 
-    Future.delayed(const Duration(milliseconds: 3200), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      }
-    });
-  }
+  // 🧩 ДОДАЙ ЦЕ! Інакше в браузері відео не запуститься
+  _videoController.setVolume(0); 
+
+  _videoController.play();
+
+  Future.delayed(const Duration(milliseconds: 3200), () {
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    }
+  });
+}
+
 
   @override
   void dispose() {
