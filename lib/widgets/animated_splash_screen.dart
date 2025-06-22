@@ -48,7 +48,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
   }
 
   void _startSplashTimer() {
-    Future.delayed(const Duration(milliseconds: 3200), () {
+    Future.delayed(const Duration(milliseconds: 2900), () {
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/home');
       }
