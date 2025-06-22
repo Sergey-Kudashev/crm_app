@@ -59,31 +59,27 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: _gifFailed
-            ? Image.asset(
-                'assets/splash_logo.png',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              )
-            : Image.asset(
-                'assets/splash.gif',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                gaplessPlayback: true,
-                errorBuilder: (context, error, stackTrace) {
-                  setState(() {
-                    _gifFailed = true;
-                  });
-                  return Image.asset(
-                    'assets/splash_logo.png',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  );
-                },
-              ),
+        child: FittedBox(
+          fit: BoxFit.fitWidth,
+          child: _gifFailed
+              ? Image.asset(
+                  'assets/splash_logo.png',
+                  gaplessPlayback: true,
+                )
+              : Image.asset(
+                  'assets/splash.gif',
+                  gaplessPlayback: true,
+                  errorBuilder: (context, error, stackTrace) {
+                    setState(() {
+                      _gifFailed = true;
+                    });
+                    return Image.asset(
+                      'assets/splash_logo.png',
+                      gaplessPlayback: true,
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }

@@ -62,9 +62,7 @@ flutter_native_splash:
   fullscreen: true
 
   image_dark: assets/splash_logo.png
-  android_gravity: fill
-  ios_content_mode: scaleToFill
-  web_image_mode: center
+  web_image_mode: contain
 
 dev_dependencies:
   flutter_native_splash: ^2.3.10
