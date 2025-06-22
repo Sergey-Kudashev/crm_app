@@ -14,6 +14,7 @@ class AnimatedSplashScreen extends StatefulWidget {
 
 class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
   late VideoPlayerController _videoController;
+  bool _videoError = false;
 
   @override
   void initState() {
@@ -48,29 +49,45 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
   }
 
   Future<void> _initVideo() async {
-    if (kIsWeb) {
-      _videoController = VideoPlayerController.network('videos/splash.mp4');
-    } else {
-      _videoController = VideoPlayerController.asset('assets/videos/splash.mp4');
-    }
-
-    await _videoController.initialize();
-    _videoController.setLooping(false);
-    _videoController.setVolume(0); // потрібно для Web autoplay
-    _videoController.play();
-
-    // Навігація після завершення відео
-    _videoController.addListener(() {
-      if (_videoController.value.position >= _videoController.value.duration &&
-          mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+    try {
+      if (kIsWeb) {
+        _videoController = VideoPlayerController.network('videos/splash.mp4');
+      } else {
+        _videoController = VideoPlayerController.asset('assets/videos/splash.mp4');
       }
-    });
+
+      await _videoController.initialize();
+      _videoController.setLooping(false);
+      _videoController.setVolume(0); // Для Web autoplay
+      _videoController.play();
+
+      // Навігація після завершення
+      _videoController.addListener(() {
+        if (_videoController.value.position >= _videoController.value.duration &&
+            mounted) {
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+      });
+    } catch (e) {
+      debugPrint('Video init error: $e');
+      setState(() {
+        _videoError = true;
+      });
+
+      // Якщо відео не запускається, перейти через 3 секунди
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
-    _videoController.dispose();
+    if (!_videoError) {
+      _videoController.dispose();
+    }
     super.dispose();
   }
 
@@ -79,12 +96,16 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: _videoController.value.isInitialized
-            ? AspectRatio(
+        child: _videoError || !_videoController.value.isInitialized
+            ? Image.asset(
+                'assets/splash_logo.png',
+                width: 160,
+                height: 160,
+              )
+            : AspectRatio(
                 aspectRatio: _videoController.value.aspectRatio,
                 child: VideoPlayer(_videoController),
-              )
-            : const SizedBox(), // можна додати спіннер
+              ),
       ),
     );
   }
