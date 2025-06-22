@@ -47,23 +47,26 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
     }
   }
 
-Future<void> _initVideo() async {
-  _videoController = VideoPlayerController.asset('assets/videos/splash.mp4');
-  await _videoController.initialize();
-  _videoController.setLooping(false);
-
-  // 🧩 ДОДАЙ ЦЕ! Інакше в браузері відео не запуститься
-  _videoController.setVolume(0); 
-
-  _videoController.play();
-
-  Future.delayed(const Duration(milliseconds: 3200), () {
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/home');
+  Future<void> _initVideo() async {
+    if (kIsWeb) {
+      _videoController = VideoPlayerController.network('videos/splash.mp4');
+    } else {
+      _videoController = VideoPlayerController.asset('assets/videos/splash.mp4');
     }
-  });
-}
 
+    await _videoController.initialize();
+    _videoController.setLooping(false);
+    _videoController.setVolume(0); // потрібно для Web autoplay
+    _videoController.play();
+
+    // Навігація після завершення відео
+    _videoController.addListener(() {
+      if (_videoController.value.position >= _videoController.value.duration &&
+          mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -81,7 +84,7 @@ Future<void> _initVideo() async {
                 aspectRatio: _videoController.value.aspectRatio,
                 child: VideoPlayer(_videoController),
               )
-            : const SizedBox(), // або можна показати спіннер
+            : const SizedBox(), // можна додати спіннер
       ),
     );
   }
