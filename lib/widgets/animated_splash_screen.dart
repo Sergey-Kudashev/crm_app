@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:html' as html;
 import 'package:flutter/foundation.dart' show kIsWeb;
-
+import 'package:video_player/video_player.dart';
 
 class AnimatedSplashScreen extends StatefulWidget {
   const AnimatedSplashScreen({super.key});
@@ -13,62 +12,28 @@ class AnimatedSplashScreen extends StatefulWidget {
   State<AnimatedSplashScreen> createState() => _AnimatedSplashScreenState();
 }
 
-class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
-    with TickerProviderStateMixin {
-  late final AnimationController _moveController;
-  late final Animation<double> _moveAnimation;
-  late final Animation<double> _rotationAnimation;
-  late final AnimationController _fadeController;
-  late Future<void> _preloadFuture;
+class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
+  late VideoPlayerController _videoController;
 
   @override
   void initState() {
-// setThemeColorForWeb();
-
     super.initState();
-
-    _preloadFuture = _preloadHome();
-
-    _moveController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
-    _moveAnimation = TweenSequence([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 50.0), weight: 30),
-      TweenSequenceItem(tween: Tween(begin: 50.0, end: -200.0), weight: 70),
-    ]).animate(CurvedAnimation(
-      parent: _moveController,
-      curve: Curves.easeInOut,
-    ));
-
-    // 🔄 Обертання логотипа
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 2 * 3.1416) // 360°
-        .animate(CurvedAnimation(
-      parent: _moveController,
-      curve: Curves.easeInOut,
-    ));
-
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-
-    _startAnimation();
+    _setThemeColorForWeb();
+    _preloadHome();
+    _initVideo();
   }
 
-  void setThemeColorForWeb() {
-  if (kIsWeb) {
-    html.document
-        .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', '#673AB7');
+  void _setThemeColorForWeb() {
+    if (kIsWeb) {
+      html.document
+          .querySelector('meta[name="theme-color"]')
+          ?.setAttribute('content', '#673AB7');
+    }
   }
-}
 
   Future<void> _preloadHome() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-
     try {
       await FirebaseFirestore.instance
           .collection('users')
@@ -82,33 +47,22 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
     }
   }
 
-  Future<void> _startAnimation() async {
-    await Future.wait([
-      _moveController.forward(),
-      _preloadFuture,
-    ]);
-    await _fadeController.forward();
+  Future<void> _initVideo() async {
+    _videoController = VideoPlayerController.asset('assets/videos/splash.mp4');
+    await _videoController.initialize();
+    _videoController.setLooping(false);
+    _videoController.play();
 
-    // SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    //   statusBarColor: Colors.deepPurple,
-    //   statusBarIconBrightness: Brightness.light,
-    // ));
-//     if (kIsWeb) {
-//   html.document
-//       .querySelector('meta[name="theme-color"]')
-//       ?.setAttribute('content', '#673AB7');
-// }
-setThemeColorForWeb();
-
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/home');
-    }
+    Future.delayed(const Duration(milliseconds: 3200), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    });
   }
 
   @override
   void dispose() {
-    _moveController.dispose();
-    _fadeController.dispose();
+    _videoController.dispose();
     super.dispose();
   }
 
@@ -116,33 +70,13 @@ setThemeColorForWeb();
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: AnimatedBuilder(
-        animation: Listenable.merge([_moveController, _fadeController]),
-        builder: (context, child) {
-          return SizedBox.expand(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Transform.translate(
-                  offset: Offset(0, _moveAnimation.value),
-                  child: Transform.rotate(
-                    angle: _rotationAnimation.value,
-                    child: Opacity(
-                      opacity: 1.0 - _fadeController.value,
-                      child: Center(
-                        child: Image.asset(
-                          'assets/splash_logo.png',
-                          width: 120,
-                          height: 120,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+      body: Center(
+        child: _videoController.value.isInitialized
+            ? AspectRatio(
+                aspectRatio: _videoController.value.aspectRatio,
+                child: VideoPlayer(_videoController),
+              )
+            : const SizedBox(), // або можна показати спіннер
       ),
     );
   }
